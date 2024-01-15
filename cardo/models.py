@@ -1,21 +1,26 @@
+# sync_app/models.py
 from django.db import models
 
-
-class Trade(models.Model):
-    loan_id = models.CharField(primary_key=True, max_length=50)
+class CardoTrade(models.Model):
+    identifier = models.CharField(max_length=255, unique=True)
     issue_date = models.DateField()
     maturity_date = models.DateField()
-    invested_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    debtor_identifier = models.CharField(max_length=50)
-    seller_identifier = models.CharField(max_length=50)
+    invested_amount = models.FloatField()
+    debtor_identifier = models.CharField(max_length=255)
+    seller_identifier = models.CharField(max_length=255)
+
+class CardoTransaction(models.Model):
+    operation = models.CharField(max_length=255)
+    timestamp = models.DateTimeField()
+    amount = models.FloatField()
+    trade_identifier = models.CharField(max_length=255)
+    platform_transaction_id = models.CharField(max_length=255)
+
+# sync_app/models.py
 
 
-class Cash_flows(models.Model):
-    cashflow_id = models.CharField(primary_key=True, max_length=75)
-    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, db_column='trade_id', related_name="cashflows")
-    cashflow_date = models.DateField()
-    cashflow_currency = models.CharField(max_length=10)
-    cashflow_type = models.CharField(max_length=20)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+class ColumnMapping(models.Model):
+    raw_column = models.CharField(max_length=255, choices=[])  # choices will be populated dynamically
+    standardized_column = models.CharField(max_length=255, choices=[])  # choices will be populated dynamically
+    data_type = models.CharField(max_length=255)
 
-# Create your models here.
