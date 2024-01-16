@@ -2,38 +2,12 @@ from django.db import models
 
 
 class Trade(models.Model):
-    loan_id = models.CharField(max_length=255, null=True, blank=True)
-    debtor_identifier = models.CharField(max_length=100,null=True, blank=True)
-    seller_identifier = models.CharField(max_length=100,null=True, blank=True)
-    issue_date = models.CharField(max_length=75,null=True, blank=True)
-    currency = models.CharField(max_length=10, null=True, blank=True)
-    trade_receivable_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    purchase_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    purchase_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    outstanding_principal_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    approved_limit = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    maturity_date = models.CharField(max_length=75,null=True, blank=True)
-    extension_date = models.CharField(max_length=75,null=True, blank=True)
-    interest_rate_exp = models.CharField(max_length=15, null=True, blank=True)
-    expected_net_return = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    closing_date = models.CharField(max_length=75,null=True, blank=True)
-    trade_receivable_status = models.CharField(max_length=50, null=True, blank=True)
-    days_in_delay = models.IntegerField(null=True, blank=True)
-    performance_status = models.CharField(max_length=50, null=True, blank=True)
-    default_date = models.CharField(max_length=75,null=True, blank=True)
-    default_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    write_off_date = models.CharField(max_length=75,null=True, blank=True)
-    write_off_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    repurchased = models.CharField(max_length=15,null=True, blank=True)
-    current_rating = models.CharField(max_length=50, null=True, blank=True)
-    rating_source = models.CharField(max_length=50, null=True, blank=True)
-    day_count_convention = models.CharField(max_length=50, null=True, blank=True)
-    rollovered_status = models.CharField(max_length=50, null=True, blank=True)
-    rollovered_id = models.IntegerField(null=True, blank=True)
-    rollovered_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
-    company_bankrupted_status = models.CharField(max_length=50, null=True, blank=True)
-    company_bankrupted_date = models.CharField(max_length=50,null=True, blank=True)
-    related_parties = models.CharField(max_length=255, null=True, blank=True)
+    identifier= models.CharField(max_length=100, primary_key=True)
+    issue_date=models.DateField()
+    maturity_date=models.DateField()
+    invested_amount=models.DecimalField(max_digits=10,decimal_places=2)
+    debitor_identifier=models.CharField(max_length=50)
+    seller_identifier=models.CharField(max_length=50)
 
     class Meta:
         verbose_name_plural = "Trades"
@@ -43,12 +17,11 @@ class Trade(models.Model):
 
 
 class Cash_flows(models.Model):
-    cashflow_id = models.CharField(primary_key=True, max_length=75)
-    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, db_column='trade_id', related_name="cashflows")
-    cashflow_date = models.DateField()
-    cashflow_currency = models.CharField(max_length=10)
-    cashflow_type = models.CharField(max_length=20)
+    platform_transaction_id = models.CharField(primary_key=True, max_length=75)
+    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, db_column='trade_identifier', related_name="cashflows")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    timestamp=models.DateField()
+    operation=models.OneToOneField(to="Operators",related_name="operations", on_delete=models.CASCADE)
 
 
 class Operators(models.Model):
