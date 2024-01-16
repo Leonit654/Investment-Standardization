@@ -3,11 +3,12 @@ from django.db import models
 
 class Trade(models.Model):
     identifier= models.CharField(max_length=100, primary_key=True)
-    issue_date=models.DateField()
-    maturity_date=models.DateField()
-    invested_amount=models.DecimalField(max_digits=10,decimal_places=2)
-    debitor_identifier=models.CharField(max_length=50)
-    seller_identifier=models.CharField(max_length=50)
+    debtor_identifier = models.CharField(max_length=50, blank=True)
+    seller_identifier = models.CharField(max_length=50, blank=True)
+    issue_date=models.DateField(null=True,blank=True)
+    invested_amount=models.DecimalField(null=True,max_digits=10,decimal_places=2,blank=True)
+    maturity_date = models.DateField(null=True, blank=True)
+
 
     class Meta:
         verbose_name_plural = "Trades"

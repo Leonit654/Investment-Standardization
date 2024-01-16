@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from cardo.api.views import UploadFileView
+from cardo.api.views import GetHeadExcelView, GetStandardFiled, MappingView
 
 urlpatterns = [
-    path("upload/", UploadFileView.as_view(), name="upload-files"),
+    path("upload/", GetHeadExcelView.as_view(), name="upload-files"),
+    path("standard_fields/", GetStandardFiled.as_view(), name="standard-fields"),
+    path("mapping-fields/", MappingView.as_view(), name="mapping"),
 ]

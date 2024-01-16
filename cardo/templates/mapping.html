@@ -1,0 +1,19 @@
+<!-- your_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Template</title>
+</head>
+<body>
+    <h2>Map Columns Form</h2>
+    <form method="post" action="/investment_management/mapping-fields/" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="cash_flows" accept=".xlsx, .xls">
+        <br>
+        {{ form.as_p }}
+        <button type="submit">Map Columns</button>
+    </form>
+</body>
+</html>
