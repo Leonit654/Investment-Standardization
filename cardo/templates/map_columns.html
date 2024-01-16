@@ -1,0 +1,28 @@
+<!-- sync_app/templates/map_columns.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Columns</title>
+</head>
+<body>
+    <h2>Map Columns</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.data_mapping.label_tag }}
+        {{ form.data_mapping }}
+        <br>
+        {{ form.data_type.label_tag }}
+        {{ form.data_type }}
+        <br>
+        <button type="submit">Save Mapping</button>
+    </form>
+    <br>
+    <a href="{% url 'upload_raw_data' %}">Upload Raw Data</a>
+    <br>
+    <a href="{% url 'download_raw_data' %}">Download Raw Data</a>
+    <br>
+    <a href="{% url 'download_standardized_data' %}">Download Standardized Data</a>
+</body>
+</html>

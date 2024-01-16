@@ -1,0 +1,17 @@
+<!-- sync_app/templates/upload_raw_data.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Raw Data</title>
+</head>
+<body>
+    <h2>Upload Raw Data</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.raw_data_file.label_tag }} {{ form.raw_data_file }}
+        <button type="submit">Upload Raw Data</button>
+    </form>
+</body>
+</html>

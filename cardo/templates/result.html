@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{% block content %}
+  <h2>Result</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+  </form>
+  <hr>
+  <h3>Column Mapping:</h3>
+  <ul>
+    <li>Identifier: {{ form.identifier }}</li>
+    <li>Issue Date: {{ form.issue_date }}</li>
+    <li>Maturity Date: {{ form.maturity_date }}</li>
+    <li>Invested Amount: {{ form.invested_amount }}</li>
+    <li>Debtor Identifier: {{ form.debtor_identifier }}</li>
+    <li>Seller Identifier: {{ form.seller_identifier }}</li>
+  </ul>
+{% endblock %}
+
+</body>
+</html>
