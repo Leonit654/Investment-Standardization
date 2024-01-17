@@ -1,4 +1,6 @@
 import pandas as pd
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.forms import DecimalField
 from rest_framework import status
 from rest_framework.views import APIView
@@ -84,46 +86,46 @@ class CashflowView(APIView):
 
             for index, row in df_cashflows.iterrows():
                 try:
-                    # Convert 'loan_identifier' to int
-                    row['loan_identifier'] = int(row['loan_identifier'])
+                    # Create a copy of the mapping to avoid modifying the original
+                    current_mapping = cashflow_mapping.copy()
 
-                    # Assuming the user provides a mapping for the loan identifier field
-                    loan_identifier_column = cashflow_mapping.get('loan_identifier', 'loan_identifier')
-                    operation_identifier_column = cashflow_mapping.get('cashflow_type', 'cashflow_type')
+                    trade_identifier_column = current_mapping.get('trade_identifier')
+                    operation_identifier_column = current_mapping.get('operation')
 
-                    # Fetch the Trade object using the loan identifier
-                    trade = Trade.objects.get(identifier=row[loan_identifier_column])
+                    trade = self.get_trade(row[trade_identifier_column])
 
-                    # Determine the transaction type based on 'cashflow_type' and the sign of 'amount'
+                    amount_column = current_mapping.get('amount')
+                    amount = self.clean_and_convert_amount(row[amount_column])
+
                     cashflow_type = row[operation_identifier_column]
-                    amount = row['amount']
 
                     if cashflow_type == 'cash_order':
                         # Check the sign of 'amount' and set the transaction type accordingly
-                        if amount < 0:
-                            transaction_type = 'withdrawal'
-                        else:
-                            transaction_type = 'deposit'
+                        transaction_type = 'withdrawal' if amount < 0 else 'deposit'
                     else:
-                        # For other 'cashflow_type', directly use 'cashflow_type' as transaction type
                         transaction_type = cashflow_type
 
-                    # Query the Operators model based on the determined transaction type
-                    operation = Operators.objects.get(transaction_type=transaction_type)
+                    operation = self.get_operation(transaction_type)
 
-                    # Remove loan_identifier_column from the mapping since it's already used to get the Trade
-                    cashflow_mapping.pop('loan_identifier', None)
-
-                    # Remove trade_identifier and cashflow_type from the mapping if they exist
-                    cashflow_mapping.pop('trade_identifier', None)
-                    cashflow_mapping.pop('cashflow_type', None)
+                    current_mapping.pop('trade_identifier', None)
+                    current_mapping.pop('cashflow_type', None)
 
                     try:
-                        # Continue with the original code
-                        cashflow_data = {model_field: row[excel_column] for model_field, excel_column in
-                                         cashflow_mapping.items()}
+                        cashflow_data = {}
+                        for model_field, excel_column in current_mapping.items():
+                            cleaned_column = excel_column.replace(" ", "")  # Remove spaces in column names
+                            model_field_type = self.get_model_field_type(model_field)
+
+                            # Convert data types if needed
+                            if model_field_type == DecimalField:
+                                cashflow_data[model_field] = self.clean_and_convert_amount(row[cleaned_column])
+                            else:
+                                cashflow_data[model_field] = row[cleaned_column]
+
                         cashflow_data['trade'] = trade
+                        cashflow_data['amount'] = amount
                         cashflow_data['operation'] = operation
+
                         cashflow = Cash_flows(**cashflow_data)
                         cashflow.save()
 
@@ -137,6 +139,53 @@ class CashflowView(APIView):
 
         else:
             return Response("Please upload the cashflows file", status=400)
+
+    def get_trade(self, identifier):
+        try:
+            # Check if identifier is a float before converting to int
+            if isinstance(identifier, float):
+                identifier = int(identifier)
+
+            return Trade.objects.get(identifier=identifier)
+        except ObjectDoesNotExist:
+            # Handle case when the trade doesn't exist
+            print(f"Trade with identifier '{identifier}' not found.")
+            return None
+        except ValueError:
+            # Handle case when identifier cannot be converted to int
+            print(f"Invalid identifier: '{identifier}'. Unable to convert to int.")
+            return None
+
+    def clean_and_convert_amount(self, value):
+        if ',' in str(value):
+            # Remove commas if they exist
+            cleaned_value = value.replace(',', '')
+        else:
+            cleaned_value = value
+
+
+        try:
+            return float(cleaned_value)
+        except ValueError:
+            # Handle case when value cannot be converted to float
+            print(f"Invalid amount value: '{cleaned_value}'. Unable to convert to float.")
+            return None
+
+    def get_operation(self, transaction_type):
+        try:
+            # Perform a case-insensitive partial match search
+            operation = Operators.objects.get(
+                Q(transaction_type__icontains=transaction_type)
+            )
+            return operation
+        except ObjectDoesNotExist:
+            # Handle case when the operation doesn't exist
+            print(f"Operation with transaction type containing '{transaction_type}' not found.")
+            return None
+
+    def get_model_field_type(self, field_name):
+        # Get the field type from the model's meta information
+        return Cash_flows._meta.get_field(field_name).__class__
 
 class GetTradeColumns(APIView):
     parser_classes = (MultiPartParser,)
