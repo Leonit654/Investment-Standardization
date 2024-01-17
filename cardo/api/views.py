@@ -4,14 +4,9 @@ from django.db.models import Q
 from django.forms import DecimalField
 from rest_framework import status
 from rest_framework.views import APIView
-import datetime as dt
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from django.shortcuts import render
 from cardo.models import Cash_flows, Trade,Operators
-from decimal import Decimal
-from cardo.api.serializers import TradeSerializer, CashFlowSerializer
-from ..forms import MappingForm
 import json
 
 
@@ -90,6 +85,7 @@ class CashflowView(APIView):
                     current_mapping = cashflow_mapping.copy()
 
                     trade_identifier_column = current_mapping.get('trade_identifier')
+
                     operation_identifier_column = current_mapping.get('operation')
 
                     trade = self.get_trade(row[trade_identifier_column])
@@ -105,7 +101,9 @@ class CashflowView(APIView):
                     else:
                         transaction_type = cashflow_type
 
-                    operation = self.get_operation(transaction_type)
+                    if transaction_type == 'repayment':
+                        transaction_type = 'general_repayment'
+                    operation = Operators.objects.get(transaction_type=transaction_type)
 
                     current_mapping.pop('trade_identifier', None)
                     current_mapping.pop('cashflow_type', None)
@@ -171,17 +169,7 @@ class CashflowView(APIView):
             print(f"Invalid amount value: '{cleaned_value}'. Unable to convert to float.")
             return None
 
-    def get_operation(self, transaction_type):
-        try:
-            # Perform a case-insensitive partial match search
-            operation = Operators.objects.get(
-                Q(transaction_type__icontains=transaction_type)
-            )
-            return operation
-        except ObjectDoesNotExist:
-            # Handle case when the operation doesn't exist
-            print(f"Operation with transaction type containing '{transaction_type}' not found.")
-            return None
+
 
     def get_model_field_type(self, field_name):
         # Get the field type from the model's meta information
