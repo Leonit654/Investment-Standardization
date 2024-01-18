@@ -1,15 +1,14 @@
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
 from django.forms import DecimalField
-from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
-from rest_framework.response import Response
 from cardo.models import Cash_flows, Trade,Operators
 import json
-
-
+from rest_framework.response import Response
+from rest_framework import status, viewsets, generics
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
+from cardo.util import Sanitization
 class MappingView(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -20,20 +19,15 @@ class MappingView(APIView):
         if trade_file:
             df_trades = pd.read_excel(trade_file)
 
-            # Get the mapping from the request body
             trade_mapping = json.loads(request.data.get('trade_mapping', '{}'))
 
-
-            # Map Excel columns to model fields and save to the database
             for index, row in df_trades.iterrows():
-                # Ensure 'issue_date' is provided in trade_data, if not, set it to None
                 trade_data = {model_field: row[excel_column] if pd.notna(row[excel_column]) else None
                               for model_field, excel_column in trade_mapping.items()}
-                print(trade_data)
-                trade_data['issue_date'] = pd.to_datetime(trade_data['issue_date'],
-                                                          format='%d/%m/%Y').strftime('%Y-%m-%d')
-                trade_data['maturity_date'] = pd.to_datetime(trade_data['maturity_date'],
-                                                             format='%d/%m/%Y').strftime('%Y-%m-%d')
+
+                trade_data['issue_date'] = Sanitization.convert_to_proper_date(trade_data['issue_date'])
+                trade_data['maturity_date'] = Sanitization.convert_to_proper_date(trade_data['maturity_date'])
+                trade_data['interest_rate'] = float(trade_data['interest_rate'].split('%')[0]) / 100
 
                 trade = Trade(**trade_data)
                 trade.save()
@@ -42,18 +36,15 @@ class MappingView(APIView):
 
         elif cashflow_file:
             df_cashflows = pd.read_excel(cashflow_file)
-            df_cashflows['cashflow_date'] = pd.to_datetime(df_cashflows['cashflow_date'],
-                                                           format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
+            df_cashflows['cashflow_date'] = Sanitization.convert_to_proper_date(df_cashflows['cashflow_date'])
 
-            # Get the mapping from the request body
+
             cashflow_mapping = json.loads(request.data.get('cashflow_mapping', '{}'))
 
-            # Map Excel columns to model fields and save to the database
             for index, row in df_cashflows.iterrows():
                 try:
                     trade = Trade.objects.get(loan_id=row['loan_id'])
-                    cashflow_data = {model_field: row[excel_column] for excel_column, model_field in
-                                     cashflow_mapping.items()}
+                    cashflow_data = {model_field: row[excel_column] for excel_column, model_field in cashflow_mapping.items()}
                     cashflow_data['trade'] = trade
                     cashflow = Cash_flows(**cashflow_data)
                     cashflow.save()
@@ -72,108 +63,78 @@ class CashflowView(APIView):
     def post(self, request, format=None):
         cashflow_file = request.FILES.get('cash_flows')
 
-        if cashflow_file:
+        if not cashflow_file:
+            return Response("Please upload the cashflows file", status=400)
+
+        try:
             df_cashflows = pd.read_excel(cashflow_file)
-            df_cashflows['cashflow_date'] = pd.to_datetime(df_cashflows['cashflow_date'],
-                                                           format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
 
-            cashflow_mapping = json.loads(request.data.get('cashflow_mapping', '{}'))
+            # df_cashflows['cashflow_date'] = pd.to_datetime(df_cashflows['cashflow_date'], format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
 
-            for index, row in df_cashflows.iterrows():
+            cashflow_mapping = json.loads(request.data.get('cashflow_mapping', {}))
+
+            cashflows_to_create = []
+
+            for _, row in df_cashflows.iterrows():
                 try:
-                    # Create a copy of the mapping to avoid modifying the original
                     current_mapping = cashflow_mapping.copy()
+                    trade_identifier_column = current_mapping.pop('trade_identifier', None)
 
-                    trade_identifier_column = current_mapping.get('trade_identifier')
-
-                    operation_identifier_column = current_mapping.get('operation')
-
-                    trade = self.get_trade(row[trade_identifier_column])
-
-                    amount_column = current_mapping.get('amount')
-                    amount = self.clean_and_convert_amount(row[amount_column])
-
-                    cashflow_type = row[operation_identifier_column]
-
-                    if cashflow_type == 'cash_order':
-                        # Check the sign of 'amount' and set the transaction type accordingly
-                        transaction_type = 'withdrawal' if amount < 0 else 'deposit'
+                    if trade_identifier_column:
+                        trade_value = row[trade_identifier_column]
+                        if pd.notna(trade_value):
+                            trade = Sanitization.get_trade(trade_value)
+                        else:
+                            trade = None
                     else:
-                        transaction_type = cashflow_type
+                        trade = None
 
-                    if transaction_type == 'repayment':
-                        transaction_type = 'general_repayment'
-                    operation = Operators.objects.get(transaction_type=transaction_type)
+                    operation_identifier_column = current_mapping.pop('operation', None)
 
-                    current_mapping.pop('trade_identifier', None)
-                    current_mapping.pop('cashflow_type', None)
+                    if operation_identifier_column:
+                        cashflow_type = row[operation_identifier_column]
+                        transaction_type = 'withdrawal' if cashflow_type == 'cash_order' and row['amount'] < 0 else cashflow_type
 
-                    try:
-                        cashflow_data = {}
-                        for model_field, excel_column in current_mapping.items():
-                            cleaned_column = excel_column.replace(" ", "")  # Remove spaces in column names
-                            model_field_type = self.get_model_field_type(model_field)
+                        if transaction_type == 'repayment':
+                            transaction_type = 'general_repayment'
 
-                            # Convert data types if needed
-                            if model_field_type == DecimalField:
-                                cashflow_data[model_field] = self.clean_and_convert_amount(row[cleaned_column])
-                            else:
-                                cashflow_data[model_field] = row[cleaned_column]
+                        operation = Operators.objects.get(transaction_type=transaction_type)
+                    else:
+                        operation = None
 
-                        cashflow_data['trade'] = trade
-                        cashflow_data['amount'] = amount
-                        cashflow_data['operation'] = operation
+                    cashflow_data = {}
 
-                        cashflow = Cash_flows(**cashflow_data)
-                        cashflow.save()
+                    for model_field, excel_column in current_mapping.items():
+                        cleaned_column = excel_column.replace(" ", "")
+                        model_field_type = Sanitization.get_model_field_type(model_field)
 
-                    except Exception as e:
-                        print(f"An error occurred: {e}")
+                        if model_field_type == DecimalField:
+                            cashflow_data[model_field] = Sanitization.clean_and_convert_amount(row[cleaned_column])
+                        else:
+                            cashflow_data[model_field] = row[cleaned_column]
 
+                    cashflow_data['trade'] = trade
+                    cashflow_data['amount'] = Sanitization.clean_and_convert_amount(row['amount']) if 'amount' in row else None
+                    cashflow_data['operation'] = operation
+                    cashflow_data['timestamp'] = pd.to_datetime(cashflow_data['timestamp'],
+                                                                   format='%d/%m/%Y').strftime('%Y-%m-%d')
+
+                    cashflows_to_create.append(Cash_flows(**cashflow_data))
+
+                except ObjectDoesNotExist as e:
+                    print(f"Trade not found: {e}")
+                except ValueError as e:
+                    print(f"Invalid value: {e}")
                 except Exception as e:
-                    print(e)
+                    print(f"An error occurred: {e}")
+
+            Cash_flows.objects.bulk_create(cashflows_to_create)
 
             return Response("Cash flows uploaded successfully", status=200)
 
-        else:
-            return Response("Please upload the cashflows file", status=400)
-
-    def get_trade(self, identifier):
-        try:
-            # Check if identifier is a float before converting to int
-            if isinstance(identifier, float):
-                identifier = int(identifier)
-
-            return Trade.objects.get(identifier=identifier)
-        except ObjectDoesNotExist:
-            # Handle case when the trade doesn't exist
-            print(f"Trade with identifier '{identifier}' not found.")
-            return None
-        except ValueError:
-            # Handle case when identifier cannot be converted to int
-            print(f"Invalid identifier: '{identifier}'. Unable to convert to int.")
-            return None
-
-    def clean_and_convert_amount(self, value):
-        if ',' in str(value):
-            # Remove commas if they exist
-            cleaned_value = value.replace(',', '')
-        else:
-            cleaned_value = value
-
-
-        try:
-            return float(cleaned_value)
-        except ValueError:
-            # Handle case when value cannot be converted to float
-            print(f"Invalid amount value: '{cleaned_value}'. Unable to convert to float.")
-            return None
-
-
-
-    def get_model_field_type(self, field_name):
-        # Get the field type from the model's meta information
-        return Cash_flows._meta.get_field(field_name).__class__
+        except Exception as e:
+            print(f"An error occurred while processing the cashflows file: {e}")
+            return Response("An error occurred while processing the cashflows file", status=500)
 
 class GetTradeColumns(APIView):
     parser_classes = (MultiPartParser,)
@@ -209,3 +170,100 @@ class GetStandardFiled(APIView):
                          'seller_identifier']
 
         return Response(standard_data, status=status.HTTP_200_OK)
+
+
+class CustomLoanPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+# class LoanViewSet(viewsets.ModelViewSet):
+#     queryset = Trade.objects.all()
+#     serializer_class = LoanSerializer
+#     pagination_class = CustomLoanPagination
+#
+#
+#
+# class CashFlowViewSet(viewsets.ModelViewSet):
+#     queryset = CashFlow.objects.all()
+#     serializer_class = CashFlowSerializer
+#     pagination_class = CustomLoanPagination
+
+
+# class LoanDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Loan.objects.all()
+#     serializer_class = LoanSerializer
+#     lookup_field = 'loan_id'  # Specify the field to use for the lookup
+#
+#     def get(self, request, *args, **kwargs):
+#         return self.retrieve(request, *args, **kwargs)
+#
+#     def put(self, request, *args, **kwargs):
+#         return self.update(request, *args, **kwargs)
+#
+#     def delete(self, request, *args, **kwargs):
+#         return self.destroy(request, *args, **kwargs)
+#
+#
+# class CashFlowDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = CashFlow.objects.all()
+#     serializer_class = CashFlowSerializer
+#     lookup_field = 'cashflow_id'  # Specify the field to use for the lookup
+#
+#     def get(self, request, *args, **kwargs):
+#         return self.retrieve(request, *args, **kwargs)
+#
+#     def put(self, request, *args, **kwargs):
+#         return self.update(request, *args, **kwargs)
+#
+#     def delete(self, request, *args, **kwargs):
+#         return self.destroy(request, *args, **kwargs)
+#
+
+
+
+
+
+
+
+class RealizedAmountView(APIView):
+    def post(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        reference_date = request.data.get('reference_date', '2023-12-04')
+        realized_amount = trade.get_realized_amount(reference_date)
+        return Response({"realized_amount": realized_amount}, status=status.HTTP_200_OK)
+
+
+class GrossExpectedAmountView(APIView):
+    def post(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        reference_date = request.data.get('reference_date', '2023-12-04')
+        gross_expected_amount = trade.get_gross_expected_amount(reference_date)
+        return Response({"gross_expected_amount": gross_expected_amount}, status=status.HTTP_200_OK)
+
+
+class RemainingInvestedAmountView(APIView):
+    def post(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        reference_date = request.data.get('reference_date', '2023-12-04')
+        remaining_invested_amount = trade.get_remaining_invested_amount(reference_date)
+        return Response({"remaining_invested_amount": remaining_invested_amount}, status=status.HTTP_200_OK)
+
+
+class ClosingDateView(APIView):
+    def get(self, request, identifier, *args, **kwargs):
+        try:
+            # Fix the typo here: change `laon_id` to `loan_id`
+            trade = Trade.objects.get(identifier=identifier)
+            closing_date = trade.get_closing_date()
+            return Response(closing_date, status=status.HTTP_200_OK)
+        except Trade.DoesNotExist:
+            return Response({"error": "Loan not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+

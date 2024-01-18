@@ -16,12 +16,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from cardo.api.views import *
-
+from cardo.api.views import (
+    GetTradeColumns,
+    GetCashflowColumns,
+    CashflowView,
+    GetStandardFiled,
+    MappingView,
+    RealizedAmountView,
+    GrossExpectedAmountView,
+    RemainingInvestedAmountView,
+    ClosingDateView,
+)
 urlpatterns = [
     path("trades_columns/", GetTradeColumns.as_view(), name="upload-trade-files"),
     path("cashflow_columns/", GetCashflowColumns.as_view(), name="upload-cashflow-file"),
-    path("cashflow_mapping/",CashflowView.as_view(),name="upload-cashflow"),
+    path("cashflow_mapping/", CashflowView.as_view(), name="upload-cashflow"),
     path("standard_fields/", GetStandardFiled.as_view(), name="standard-fields"),
     path("mapping-fields/", MappingView.as_view(), name="mapping"),
+    path("realized_amount/<str:identifier>/", RealizedAmountView.as_view(), name="realized-amount"),
+    path("gross_expected_amount/<str:identifier>/", GrossExpectedAmountView.as_view(), name="gross-expected-amount"),
+    path("remaining_invested_amount/<str:identifier>/", RemainingInvestedAmountView.as_view(), name="remaining-invested-amount"),
+    path("closing_date/<str:identifier>/", ClosingDateView.as_view(), name="closing-date"),
 ]
