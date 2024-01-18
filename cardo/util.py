@@ -6,6 +6,30 @@ from cardo.models import Trade, Cash_flows
 from django.db.models import DecimalField
 
 class Sanitization:
+
+
+
+    @staticmethod
+    def clean_and_convert_fields(row, mapping):
+        cleaned_data = {}
+
+        for model_field, excel_column in mapping.items():
+            cleaned_column = excel_column.replace(" ", "")
+            model_field_type = Sanitization.get_model_field_type(model_field)
+
+            if model_field_type == DecimalField:
+                cleaned_data[model_field] = Sanitization.clean_and_convert_amount(row[cleaned_column])
+            else:
+                cleaned_data[model_field] = row[cleaned_column]
+
+        return cleaned_data
+
+    @staticmethod
+    def convert_to_proper_date(date_series):
+        return pd.to_datetime(date_series, format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
+
+
+        return cleaned_data
     @staticmethod
     def clean_and_convert_amount(value):
         if ',' in str(value):
@@ -37,10 +61,3 @@ class Sanitization:
 
 
 
-    @staticmethod
-    def convert_to_proper_date(date_string, input_format='%d/%m/%Y', output_format='%Y-%m-%d'):
-        try:
-            return pd.to_datetime(date_string, format=input_format).strftime(output_format)
-        except ValueError:
-            print(f"Invalid date format: {date_string}")
-            return None

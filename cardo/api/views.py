@@ -25,8 +25,8 @@ class MappingView(APIView):
                 trade_data = {model_field: row[excel_column] if pd.notna(row[excel_column]) else None
                               for model_field, excel_column in trade_mapping.items()}
 
-                trade_data['issue_date'] = Sanitization.convert_to_proper_date(trade_data['issue_date'])
-                trade_data['maturity_date'] = Sanitization.convert_to_proper_date(trade_data['maturity_date'])
+                trade_data['issue_date'] = pd.to_datetime(trade_data['issue_date'], format='%d/%m/%Y').strftime('%Y-%m-%d')
+                trade_data['maturity_date'] = pd.to_datetime(trade_data['maturity_date'], format='%d/%m/%Y').strftime('%Y-%m-%d')
                 trade_data['interest_rate'] = float(trade_data['interest_rate'].split('%')[0]) / 100
 
                 trade = Trade(**trade_data)
@@ -36,8 +36,7 @@ class MappingView(APIView):
 
         elif cashflow_file:
             df_cashflows = pd.read_excel(cashflow_file)
-            df_cashflows['cashflow_date'] = Sanitization.convert_to_proper_date(df_cashflows['cashflow_date'])
-
+            df_cashflows['cashflow_date'] = pd.to_datetime(df_cashflows['cashflow_date'], format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
 
             cashflow_mapping = json.loads(request.data.get('cashflow_mapping', '{}'))
 
@@ -69,7 +68,6 @@ class CashflowView(APIView):
         try:
             df_cashflows = pd.read_excel(cashflow_file)
 
-            # df_cashflows['cashflow_date'] = pd.to_datetime(df_cashflows['cashflow_date'], format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
 
             cashflow_mapping = json.loads(request.data.get('cashflow_mapping', {}))
 
