@@ -13,7 +13,7 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="f4282b30-93af-4a0f-b2a2-6f56e49de610">
-      <console name="Connection" type="STANDARD" schema="main" session="Main"><![CDATA[select count(*) from cardo_cash_flows]]></console>
+      <console name="Connection" type="STANDARD" schema="" session="Main" />
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
@@ -22,15 +22,13 @@
     </last-used-providers>
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files>
-      <object connection-id="f4282b30-93af-4a0f-b2a2-6f56e49de610" object-ref="schemas/main/tables/cardo_operators" />
-      <object connection-id="f4282b30-93af-4a0f-b2a2-6f56e49de610" object-ref="schemas/main/tables/cardo_cash_flows" />
-    </open-files>
+    <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="f4282b30-93af-4a0f-b2a2-6f56e49de610" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="b090fd64-3c68-4130-98aa-0d27a7b14270" dataset="main.cardo_operators" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="f4282b30-93af-4a0f-b2a2-6f56e49de610" dataset="main.cardo_cash_flows" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="f4282b30-93af-4a0f-b2a2-6f56e49de610" dataset="main.cardo_operators" active-filter-id="EMPTY_FILTER" />
   </component>

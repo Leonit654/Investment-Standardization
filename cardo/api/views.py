@@ -1,14 +1,68 @@
+from io import BytesIO
+from .serializers import *
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.forms import DecimalField
+from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from cardo.models import Cash_flows, Trade,Operators
-
+from cardo.models import Cash_flows, Trade, Operators
+import os
 import json
+
+
+class DownloadCashflowMappingData(APIView):
+    def get(self, request, *args, **kwargs):
+        # Retrieve all data from the model
+        queryset = Cash_flows.objects.all()
+
+        # Create a serializer instance for each object in the queryset
+        serializer = CashFlowWithTransactionTypeSerializer(queryset, many=True)
+
+        # Create a DataFrame from the serialized data
+        df = pd.DataFrame(serializer.data)
+        df.drop(columns=['operation'], inplace=True)
+        df.rename(columns={'transaction_type': 'operation'}, inplace=True)
+
+        excel_buffer = BytesIO()
+        df.to_excel(excel_buffer, index=False, engine='xlsxwriter')
+        excel_buffer.seek(0)
+
+        # Set the response headers to force download
+        response = HttpResponse(excel_buffer.read(),
+                                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=CashFlows.xlsx'
+
+        # Close the BytesIO buffer
+        excel_buffer.close()
+
+        return response
+
+
+class DownloadTradeMappingData(APIView):
+    def get(self, request, *args, **kwargs):
+        # Retrieve all data from the model
+        queryset = Trade.objects.all()
+
+        # Create a DataFrame from the model data
+        df = pd.DataFrame.from_records(queryset.values())
+
+        excel_buffer = BytesIO()
+        df.to_excel(excel_buffer, index=False, engine='xlsxwriter')
+        excel_buffer.seek(0)
+
+        # Set the response headers to force download
+        response = HttpResponse(excel_buffer.read(),
+                                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename=Trade.xlsx'
+
+        # Close the BytesIO buffer
+        excel_buffer.close()
+
+        return response
 
 
 class MappingView(APIView):
@@ -24,7 +78,6 @@ class MappingView(APIView):
             # Get the mapping from the request body
             trade_mapping = json.loads(request.data.get('trade_mapping', '{}'))
             print(trade_mapping)
-
 
             # Map Excel columns to model fields and save to the database
             for index, row in df_trades.iterrows():
@@ -62,14 +115,12 @@ class MappingView(APIView):
                     cashflow_type = row[cashflow_mapping.get('operation')]
                     print(cashflow_type)
 
-
                     # Fetch the Trade object based on loan_id
 
                     trade = Trade.objects.get(identifier=loan_id)
                     # print(trade)
                     operation = Operators.objects.get(transaction_type=cashflow_type)
                     # print(operation)
-
 
                     cashflow_data = {
 
@@ -91,15 +142,14 @@ class MappingView(APIView):
 
                     cashflow = Cash_flows(**cashflow_data)
 
-
-
                     cashflow.save()
 
                 except Trade.DoesNotExist:
 
-                  return  Response("Error uploading cashflow", status=400)
+                    return Response("Error uploading cashflow", status=400)
 
             return Response("Cash flows uploaded successfully", status=200)
+
 
 class CashflowView(APIView):
     parser_classes = (MultiPartParser,)
@@ -196,7 +246,6 @@ class CashflowView(APIView):
         else:
             cleaned_value = value
 
-
         try:
             return float(cleaned_value)
         except ValueError:
@@ -204,11 +253,10 @@ class CashflowView(APIView):
             print(f"Invalid amount value: '{cleaned_value}'. Unable to convert to float.")
             return None
 
-
-
     def get_model_field_type(self, field_name):
         # Get the field type from the model's meta information
         return Cash_flows._meta.get_field(field_name).__class__
+
 
 class GetTradeColumns(APIView):
     parser_classes = (MultiPartParser,)
@@ -223,6 +271,8 @@ class GetTradeColumns(APIView):
             print(excel_file_columns)
 
             return Response(excel_file_columns, status=status.HTTP_200_OK)
+
+
 class GetCashflowColumns(APIView):
     parser_classes = (MultiPartParser,)
 

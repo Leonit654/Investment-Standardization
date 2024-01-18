@@ -24,4 +24,6 @@ urlpatterns = [
     path("cashflow_mapping/",CashflowView.as_view(),name="upload-cashflow"),
     path("standard_fields/", GetStandardFiled.as_view(), name="standard-fields"),
     path("mapping-fields/", MappingView.as_view(), name="mapping"),
+    path("download-trade-data/",DownloadTradeMappingData.as_view(),name="download-trade"),
+    path("download-cashflow-data/",DownloadCashflowMappingData.as_view(),name="download-trade"),
 ]

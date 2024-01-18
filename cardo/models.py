@@ -1,3 +1,6 @@
+from datetime import datetime
+from decimal import Decimal
+
 from django.db import models
 
 class Trade(models.Model):
@@ -8,6 +11,53 @@ class Trade(models.Model):
     invested_amount = models.DecimalField(null=True, max_digits=10, decimal_places=2, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
 
+
+    def daily_interest_rate(self):
+        interest_rate = float(self.interest_rate.strip('%'))
+        daily_interest_rate_percent = interest_rate / 100
+        daily_interest_rate = daily_interest_rate_percent / 365
+
+        return daily_interest_rate
+
+    def daily_interest_amount(self):
+        funding = self.cashflows.filter(cashflow_type='funding')
+        invested_amount_value = 0
+        for i in funding:
+            invested_amount_value -= i.amount
+        invested_amount = abs(invested_amount_value)
+        daily_interest_rate = Decimal(self.daily_interest_rate())
+        return invested_amount * daily_interest_rate
+
+    def passed_days(self, reference_date):
+        reference_date_value = datetime.strptime(reference_date, "%Y-%m-%d").date()
+        return (reference_date_value - self.investment_date).days
+
+    def gross_expected_interest_amount(self, reference_date):
+
+        return self.daily_interest_amount() * self.passed_days(reference_date)
+
+    def gross_expected_amount(self, reference_date):
+        funding = self.cashflows.filter(cashflow_type='funding')
+        invested_amount_value = 0
+        for i in funding:
+            invested_amount_value -= i.amount
+        invested_amount = abs(invested_amount_value)
+
+        return invested_amount + self.gross_expected_interest_amount(reference_date)
+
+    def realized_amount(self, reference_date):
+        reference_date = datetime.strptime(reference_date, "%Y-%m-%d")
+        repayment_values = self.cashflows.filter(cashflow_type='repayment', cashflow_date__lte=reference_date)
+        realized_amount = sum([cashflow.amount for cashflow in repayment_values])
+        return realized_amount
+
+    def remaining_invested_amount(self, reference_date):
+        funding = self.cashflows.filter(cashflow_type='funding')
+        invested_amount_value = 0
+        for i in funding:
+            invested_amount_value -= i.amount
+        invested_amount = abs(invested_amount_value)
+        return invested_amount - self.realized_amount(reference_date)
     class Meta:
         verbose_name_plural = "Trades"
 
@@ -16,7 +66,7 @@ class Trade(models.Model):
 
 class Cash_flows(models.Model):
     platform_transaction_id = models.CharField(primary_key=True, max_length=75)
-    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, db_column='trade_identifier', related_name="cashflows")
+    trade_identifier = models.ForeignKey(Trade, on_delete=models.CASCADE, db_column='trade_identifier', related_name="cashflows")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateField()
     operation = models.ForeignKey(to="Operators", related_name="operations", on_delete=models.CASCADE)
@@ -24,3 +74,6 @@ class Cash_flows(models.Model):
 class Operators(models.Model):
     id = models.AutoField(primary_key=True)
     transaction_type = models.CharField(max_length=25)
+
+    def __str__(self):
+        return f"{self.transaction_type}"
