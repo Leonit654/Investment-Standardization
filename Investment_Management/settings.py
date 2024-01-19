@@ -39,8 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     "cardo",
+    'corsheaders'
 ]
-
+MEDIA_URL = '/media/raw-data-files/'
+MEDIA_ROOT = BASE_DIR / "media/raw-data-files"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -49,7 +51,13 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+'corsheaders.middleware.CorsMiddleware',
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    # Add other allowed origins as needed
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "Investment_Management.urls"
 

@@ -2,7 +2,7 @@ import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import DecimalField
 from rest_framework.parsers import MultiPartParser
-from cardo.models import Cash_flows, Trade,Operators
+from cardo.models import Cash_flows, Trade,Operators,RawData
 import json
 from rest_framework.response import Response
 from rest_framework import status, viewsets, generics
@@ -66,8 +66,8 @@ class CashflowView(APIView):
             return Response("Please upload the cashflows file", status=400)
 
         try:
-            df_cashflows = pd.read_excel(cashflow_file)
 
+            df_cashflows = pd.read_excel(cashflow_file)
 
             cashflow_mapping = json.loads(request.data.get('cashflow_mapping', {}))
 
@@ -100,22 +100,12 @@ class CashflowView(APIView):
                     else:
                         operation = None
 
-                    cashflow_data = {}
-
-                    for model_field, excel_column in current_mapping.items():
-                        cleaned_column = excel_column.replace(" ", "")
-                        model_field_type = Sanitization.get_model_field_type(model_field)
-
-                        if model_field_type == DecimalField:
-                            cashflow_data[model_field] = Sanitization.clean_and_convert_amount(row[cleaned_column])
-                        else:
-                            cashflow_data[model_field] = row[cleaned_column]
+                    cashflow_data = Sanitization.clean_and_convert_fields(row, current_mapping)
 
                     cashflow_data['trade'] = trade
                     cashflow_data['amount'] = Sanitization.clean_and_convert_amount(row['amount']) if 'amount' in row else None
                     cashflow_data['operation'] = operation
-                    cashflow_data['timestamp'] = pd.to_datetime(cashflow_data['timestamp'],
-                                                                   format='%d/%m/%Y').strftime('%Y-%m-%d')
+                    cashflow_data['timestamp'] = Sanitization.convert_to_proper_date(cashflow_data['timestamp'])
 
                     cashflows_to_create.append(Cash_flows(**cashflow_data))
 
@@ -127,13 +117,13 @@ class CashflowView(APIView):
                     print(f"An error occurred: {e}")
 
             Cash_flows.objects.bulk_create(cashflows_to_create)
-
+            raw_data = RawData(file=cashflow_file)
+            raw_data.save()
             return Response("Cash flows uploaded successfully", status=200)
 
         except Exception as e:
             print(f"An error occurred while processing the cashflows file: {e}")
             return Response("An error occurred while processing the cashflows file", status=500)
-
 class GetTradeColumns(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -141,12 +131,15 @@ class GetTradeColumns(APIView):
         trade_file = request.FILES.get('trades')
 
         if trade_file:
-            df_trades1 = pd.read_excel(trade_file)
+            try:
+                df_trades1 = pd.read_excel(trade_file)
+                excel_file_columns = df_trades1.columns.tolist()
 
-            excel_file_columns = df_trades1.columns
-            print(excel_file_columns)
+                return Response(excel_file_columns, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            return Response(excel_file_columns, status=status.HTTP_200_OK)
+        return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 class GetCashflowColumns(APIView):
     parser_classes = (MultiPartParser,)
 

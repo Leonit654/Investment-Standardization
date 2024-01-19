@@ -26,8 +26,11 @@ class Sanitization:
 
     @staticmethod
     def convert_to_proper_date(date_series):
-        return pd.to_datetime(date_series, format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
-
+        try:
+            return pd.to_datetime(date_series, format='%d/%m/%Y').strftime('%Y-%m-%d')
+        except Exception as e:
+            print(f"Invalid date format: {e}")
+            return None
 
         return cleaned_data
     @staticmethod
