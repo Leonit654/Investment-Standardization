@@ -8,11 +8,11 @@
   <component name="DBNavigator.Project.DatabaseBrowserManager">
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
-    <show-object-properties value="true" />
+    <show-object-properties value="false" />
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="f4282b30-93af-4a0f-b2a2-6f56e49de610">
+    <connection id="fb9ad283-3841-4b23-a627-706b79c91432">
       <console name="Connection" type="STANDARD" schema="" session="Main" />
     </connection>
   </component>
@@ -25,12 +25,11 @@
     <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="f4282b30-93af-4a0f-b2a2-6f56e49de610" />
+    <connection id="fb9ad283-3841-4b23-a627-706b79c91432" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
-    <filter-actions connection-id="b090fd64-3c68-4130-98aa-0d27a7b14270" dataset="main.cardo_operators" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="f4282b30-93af-4a0f-b2a2-6f56e49de610" dataset="main.cardo_cash_flows" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="f4282b30-93af-4a0f-b2a2-6f56e49de610" dataset="main.cardo_operators" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="fb9ad283-3841-4b23-a627-706b79c91432" dataset="main.cardo_rawdata" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="fb9ad283-3841-4b23-a627-706b79c91432" dataset="main.cardo_operators" active-filter-id="EMPTY_FILTER" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
@@ -49,7 +48,7 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection id="f4282b30-93af-4a0f-b2a2-6f56e49de610" active="true" signed="true">
+      <connection id="fb9ad283-3841-4b23-a627-706b79c91432" active="true" signed="true">
         <database>
           <name value="Connection" />
           <description value="" />
@@ -261,7 +260,7 @@
       </general>
       <filters>
         <prompt-filter-dialog value="true" />
-        <default-filter-type value="BASIC" />
+        <default-filter-type value="NONE" />
       </filters>
       <qualified-text-editor text-length-threshold="300">
         <content-types>
