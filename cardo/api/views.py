@@ -181,11 +181,18 @@ class UploadRawDataView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors)
 
-    def get(self, request, file_title, filename):
+    def get(self, request):
+        file_title = request.GET.get("file_title")
+        print(file_title)
+        filename = request.GET.get("filename")
+        print(filename)
+
         raw_data = get_object_or_404(RawData, file_title=file_title)
         file_path = raw_data.file.path
+
         response = FileResponse(open(file_path, 'rb'))
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
         return response
 
 class InsertCardoOperatorsView(APIView):

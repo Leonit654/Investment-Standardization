@@ -28,7 +28,7 @@ urlpatterns = [
     path("download-trade-data/", DownloadTradeMappingData.as_view(), name="download-trade"),
     path("download-cashflow-data/", DownloadCashflowMappingData.as_view(), name="download-trade"),
     path("upload-raw-data/", UploadRawDataView.as_view(), name="upload-raw-data"),
-    path('download-raw-data/<str:file_title>/<str:filename>/', UploadRawDataView.as_view(), name='download_raw_data'),
-    path("insert-cardo-operators/",InsertCardoOperatorsView.as_view(),name="cardo_operators"),
+    path('download-raw-data/', UploadRawDataView.as_view(), name='download_raw_data'),
+    path("insert-cardo-operators/", InsertCardoOperatorsView.as_view(), name="cardo_operators"),
 
 ]
