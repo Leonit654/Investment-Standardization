@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     "cardo",
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -48,8 +49,15 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    # Add other allowed origins as needed
+]
+CORS_ALLOW_CREDENTIALS = True
+
 
 ROOT_URLCONF = "Investment_Management.urls"
 
@@ -123,3 +131,4 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
