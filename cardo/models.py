@@ -107,20 +107,3 @@ class RawData(models.Model):
     file = models.FileField(upload_to='raw-data-file/')
 
 
-class TradeListView(APIView):
-    def get(self, request, *args, **kwargs):
-        trades = Trade.objects.all()
-        serializer = TradeListSerializer(trades, many=True)
-        return Response({"trades": serializer.data}, status=status.HTTP_200_OK)
-
-
-class TradeDetailView(APIView):
-    def get(self, request, identifier, *args, **kwargs):
-        try:
-            trade = Trade.objects.get(identifier=identifier)
-            serializer = TradeDetailSerializer(trade)
-            return Response({"trade": serializer.data}, status=status.HTTP_200_OK)
-        except Trade.DoesNotExist:
-            return Response({"error": "Trade not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
