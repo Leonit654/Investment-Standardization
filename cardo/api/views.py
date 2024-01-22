@@ -1,30 +1,21 @@
-from decimal import Decimal
 from io import BytesIO
-from cardo.api.serializers import CashFlowWithTransactionTypeSerializer, CashFlowSerializer, OperationSerializer, TradeSerializer,RawDataSerializer
+from cardo.api.serializers import CashFlowWithTransactionTypeSerializer, RawDataSerializer
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
 
-from rest_framework.parsers import MultiPartParser
-from cardo.models import Cash_flows, Trade,Operators,RawData
-import json
-from rest_framework.response import Response
-from rest_framework import status
 from cardo.serializers import *
-from rest_framework.views import APIView
-from cardo.util import Sanitization
-class MappingView(APIView):
 
-from django.db.models import Q
-from django.forms import DecimalField
+from cardo.util import Sanitization
+
 from django.http import HttpResponse, FileResponse
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from cardo.models import Cash_flows, Trade, Operators, RawData
-from ..sanitization import Sanitization
+
 from django.shortcuts import get_object_or_404
-import os
+
 import json
 
 
@@ -80,7 +71,6 @@ class DownloadTradeMappingData(APIView):
 
 
 class TradeMappingView(APIView):
-
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
@@ -91,8 +81,6 @@ class TradeMappingView(APIView):
 
             trade_mapping = json.loads(request.data.get('trade_mapping', '{}'))
 
-
-
             print(trade_mapping)
 
             # Map Excel columns to model fields and save to the database
@@ -101,21 +89,16 @@ class TradeMappingView(APIView):
                 trade_data = {model_field: row[excel_column] if pd.notna(row[excel_column]) else None
                               for model_field, excel_column in trade_mapping.items()}
 
-
-                trade_data['issue_date'] = pd.to_datetime(trade_data['issue_date'], format='%d/%m/%Y').strftime('%Y-%m-%d')
-                trade_data['maturity_date'] = pd.to_datetime(trade_data['maturity_date'], format='%d/%m/%Y').strftime('%Y-%m-%d')
-                trade_data['interest_rate'] = float(trade_data['interest_rate'].split('%')[0]) / 100
-
                 print(trade_data)
                 trade_data['interest_rate'] = Sanitization.convert_percentage_to_float(trade_data['interest_rate'])
                 trade_data['issue_date'] = Sanitization.format_date(trade_data['issue_date'])
                 trade_data['maturity_date'] = Sanitization.format_date(trade_data['maturity_date'])
 
-
                 trade = Trade(**trade_data)
                 trade.save()
 
             return Response("Trades uploaded successfully", status=200)
+
 
 class CashflowView(APIView):
     parser_classes = (MultiPartParser,)
@@ -144,7 +127,7 @@ class CashflowView(APIView):
                         if pd.notna(trade_value):
                             trade = Sanitization.get_trade(trade_value)
                         else:
-                            trade = None
+                            continue
                     else:
                         trade = None
 
@@ -152,7 +135,8 @@ class CashflowView(APIView):
 
                     if operation_identifier_column:
                         cashflow_type = row[operation_identifier_column]
-                        transaction_type = 'withdrawal' if cashflow_type == 'cash_order' and row['amount'] < 0 else cashflow_type
+                        transaction_type = 'withdrawal' if cashflow_type == 'cash_order' and row[
+                            'amount'] < 0 else cashflow_type
 
                         if transaction_type == 'repayment':
                             transaction_type = 'general_repayment'
@@ -164,7 +148,8 @@ class CashflowView(APIView):
                     cashflow_data = Sanitization.clean_and_convert_fields(row, current_mapping)
 
                     cashflow_data['trade'] = trade
-                    cashflow_data['amount'] = Sanitization.clean_and_convert_amount(row['amount']) if 'amount' in row else None
+                    cashflow_data['amount'] = Sanitization.clean_and_convert_amount(
+                        row['amount']) if 'amount' in row else None
                     cashflow_data['operation'] = operation
                     cashflow_data['timestamp'] = Sanitization.convert_to_proper_date(cashflow_data['timestamp'])
 
@@ -185,8 +170,8 @@ class CashflowView(APIView):
         except Exception as e:
             print(f"An error occurred while processing the cashflows file: {e}")
             return Response("An error occurred while processing the cashflows file", status=500)
-          
-          
+
+
 class GetTradeColumns(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -202,11 +187,7 @@ class GetTradeColumns(APIView):
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
         return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
-
-            return Response(excel_file_columns, status=status.HTTP_200_OK)
-
 
 
 class GetCashflowColumns(APIView):
@@ -230,8 +211,6 @@ class GetTradeStandardFiled(APIView):
                          'seller_identifier']
 
         return Response(standard_data, status=status.HTTP_200_OK)
-
-
 
 
 class RealizedAmountView(APIView):
@@ -271,9 +250,6 @@ class ClosingDateView(APIView):
             return Response({"error": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-
-
 class TradeListView(APIView):
     def get(self, request, *args, **kwargs):
         trades = Trade.objects.all()
@@ -291,6 +267,7 @@ class TradeDetailView(APIView):
             return Response({"error": "Trade not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class GetTransactionStandardFiled(APIView):
     def get(self, request):
@@ -324,6 +301,7 @@ class UploadRawDataView(APIView):
 
         return response
 
+
 class InsertCardoOperatorsView(APIView):
     def post(self, request, *args, **kwargs):
         # Data to be inserted
@@ -342,4 +320,3 @@ class InsertCardoOperatorsView(APIView):
                 Operators.objects.create(transaction_type=transaction_type)
 
         return HttpResponse("Data inserted successfully.")
-
