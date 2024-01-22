@@ -1,9 +1,15 @@
 from datetime import datetime
-
 from django.db import models
 from django.db.models import Sum
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 
+
+class Operators(models.Model):
+    id = models.AutoField(primary_key=True)
+    transaction_type = models.CharField(max_length=25)
 class Trade(models.Model):
     identifier = models.CharField(max_length=100, primary_key=True)
     debtor_identifier = models.CharField(max_length=50, blank=True)
@@ -87,9 +93,7 @@ class Cash_flows(models.Model):
     timestamp = models.DateField()
     operation = models.ForeignKey(to="Operators", related_name="operations", on_delete=models.CASCADE)
 
-class Operators(models.Model):
-    id = models.AutoField(primary_key=True)
-    transaction_type = models.CharField(max_length=25)
+
 
 
 
@@ -101,3 +105,22 @@ class RawData(models.Model):
 
     # FileField to store a file
     file = models.FileField(upload_to='raw-data-file/')
+
+
+class TradeListView(APIView):
+    def get(self, request, *args, **kwargs):
+        trades = Trade.objects.all()
+        serializer = TradeListSerializer(trades, many=True)
+        return Response({"trades": serializer.data}, status=status.HTTP_200_OK)
+
+
+class TradeDetailView(APIView):
+    def get(self, request, identifier, *args, **kwargs):
+        try:
+            trade = Trade.objects.get(identifier=identifier)
+            serializer = TradeDetailSerializer(trade)
+            return Response({"trade": serializer.data}, status=status.HTTP_200_OK)
+        except Trade.DoesNotExist:
+            return Response({"error": "Trade not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,12 +1,11 @@
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
-from django.forms import DecimalField
 from rest_framework.parsers import MultiPartParser
 from cardo.models import Cash_flows, Trade,Operators,RawData
 import json
 from rest_framework.response import Response
-from rest_framework import status, viewsets, generics
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import status
+from cardo.serializers import *
 from rest_framework.views import APIView
 from cardo.util import Sanitization
 class MappingView(APIView):
@@ -14,7 +13,6 @@ class MappingView(APIView):
 
     def post(self, request, format=None):
         trade_file = request.FILES.get('trades')
-        cashflow_file = request.FILES.get('cash_flows')
 
         if trade_file:
             df_trades = pd.read_excel(trade_file)
@@ -34,23 +32,6 @@ class MappingView(APIView):
 
             return Response("Trades uploaded successfully", status=200)
 
-        elif cashflow_file:
-            df_cashflows = pd.read_excel(cashflow_file)
-            df_cashflows['cashflow_date'] = pd.to_datetime(df_cashflows['cashflow_date'], format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
-
-            cashflow_mapping = json.loads(request.data.get('cashflow_mapping', '{}'))
-
-            for index, row in df_cashflows.iterrows():
-                try:
-                    trade = Trade.objects.get(loan_id=row['loan_id'])
-                    cashflow_data = {model_field: row[excel_column] for excel_column, model_field in cashflow_mapping.items()}
-                    cashflow_data['trade'] = trade
-                    cashflow = Cash_flows(**cashflow_data)
-                    cashflow.save()
-                except Trade.DoesNotExist:
-                    pass
-
-            return Response("Cash flows uploaded successfully", status=200)
 
         else:
             return Response("Please upload the trades file", status=400)
@@ -163,60 +144,6 @@ class GetStandardFiled(APIView):
         return Response(standard_data, status=status.HTTP_200_OK)
 
 
-class CustomLoanPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
-# class LoanViewSet(viewsets.ModelViewSet):
-#     queryset = Trade.objects.all()
-#     serializer_class = LoanSerializer
-#     pagination_class = CustomLoanPagination
-#
-#
-#
-# class CashFlowViewSet(viewsets.ModelViewSet):
-#     queryset = CashFlow.objects.all()
-#     serializer_class = CashFlowSerializer
-#     pagination_class = CustomLoanPagination
-
-
-# class LoanDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Loan.objects.all()
-#     serializer_class = LoanSerializer
-#     lookup_field = 'loan_id'  # Specify the field to use for the lookup
-#
-#     def get(self, request, *args, **kwargs):
-#         return self.retrieve(request, *args, **kwargs)
-#
-#     def put(self, request, *args, **kwargs):
-#         return self.update(request, *args, **kwargs)
-#
-#     def delete(self, request, *args, **kwargs):
-#         return self.destroy(request, *args, **kwargs)
-#
-#
-# class CashFlowDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = CashFlow.objects.all()
-#     serializer_class = CashFlowSerializer
-#     lookup_field = 'cashflow_id'  # Specify the field to use for the lookup
-#
-#     def get(self, request, *args, **kwargs):
-#         return self.retrieve(request, *args, **kwargs)
-#
-#     def put(self, request, *args, **kwargs):
-#         return self.update(request, *args, **kwargs)
-#
-#     def delete(self, request, *args, **kwargs):
-#         return self.destroy(request, *args, **kwargs)
-#
-
-
-
-
-
-
 
 class RealizedAmountView(APIView):
     def post(self, request, identifier, *args, **kwargs):
@@ -258,3 +185,20 @@ class ClosingDateView(APIView):
 
 
 
+class TradeListView(APIView):
+    def get(self, request, *args, **kwargs):
+        trades = Trade.objects.all()
+        serializer = TradeListSerializer(trades, many=True)
+        return Response({"trades": serializer.data}, status=status.HTTP_200_OK)
+
+
+class TradeDetailView(APIView):
+    def get(self, request, identifier, *args, **kwargs):
+        try:
+            trade = Trade.objects.get(identifier=identifier)
+            serializer = TradeDetailSerializer(trade)
+            return Response({"trade": serializer.data}, status=status.HTTP_200_OK)
+        except Trade.DoesNotExist:
+            return Response({"error": "Trade not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -26,6 +26,9 @@ from cardo.api.views import (
     GrossExpectedAmountView,
     RemainingInvestedAmountView,
     ClosingDateView,
+TradeListView,
+TradeDetailView
+
 )
 urlpatterns = [
     path("trades_columns/", GetTradeColumns.as_view(), name="upload-trade-files"),
@@ -37,4 +40,6 @@ urlpatterns = [
     path("gross_expected_amount/<str:identifier>/", GrossExpectedAmountView.as_view(), name="gross-expected-amount"),
     path("remaining_invested_amount/<str:identifier>/", RemainingInvestedAmountView.as_view(), name="remaining-invested-amount"),
     path("closing_date/<str:identifier>/", ClosingDateView.as_view(), name="closing-date"),
+    path('trades/', TradeListView.as_view(), name='trade-list'),
+    path('trade/<str:identifier>/', TradeDetailView.as_view(), name='trade-detail'),
 ]
