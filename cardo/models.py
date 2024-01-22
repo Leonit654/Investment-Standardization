@@ -1,9 +1,20 @@
 from datetime import datetime
+
 from decimal import Decimal
 from django.core.files.storage import FileSystemStorage
+
 from django.db import models
+from django.db.models import Sum
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 
+
+
+class Operators(models.Model):
+    id = models.AutoField(primary_key=True)
+    transaction_type = models.CharField(max_length=25)
 
 class Trade(models.Model):
     identifier = models.CharField(max_length=100, primary_key=True)
@@ -12,62 +23,70 @@ class Trade(models.Model):
     issue_date = models.DateField(null=True, blank=True)
     invested_amount = models.DecimalField(null=True, max_digits=10, decimal_places=2, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
-    interest_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
 
-    def daily_interest_rate(self):
-        interest_rate = self.interest_rate
-        daily_interest_rate_percent = interest_rate / 100
-        daily_interest_rate = daily_interest_rate_percent / 365
 
-        return daily_interest_rate
 
-    def daily_interest_amount(self):
-        funding_cashflows = self.cashflows.filter(operation__transaction_type='funding')
-        print(funding_cashflows)
-        invested_amount_value = 0
-        for funding_cashflow in funding_cashflows:
-            invested_amount_value -= funding_cashflow.amount
-        invested_amount = abs(invested_amount_value)
-        daily_interest_rate = Decimal(self.daily_interest_rate())
-        return invested_amount * daily_interest_rate
 
-    def passed_days(self, reference_date):
-        reference_date_value = datetime.strptime(reference_date, "%Y-%m-%d").date()
-        return (reference_date_value - self.issue_date).days
+    def get_realized_amount(self, reference_date):
+        try:
+            repayments = self.cashflows.filter(
+                timestamp__lte=reference_date,
+                operation__transaction_type__in=["principal_repayment", "interest_repayment", "general_repayment"]
+            )
 
-    def gross_expected_interest_amount(self, reference_date):
+            return repayments.aggregate(Sum("amount"))["amount__sum"] or 0
+        except Exception as e:
+            print(f"Error in get_realized_amount: {str(e)}")
+            return 0
 
-        return self.daily_interest_amount() * self.passed_days(reference_date)
+    def get_gross_expected_amount(self, reference_date_str):
+        try:
+            reference_date = datetime.strptime(reference_date_str, "%Y-%m-%d").date()
+            invested_amount = abs(
+                self.cashflows.filter(operation__transaction_type="funding").aggregate(
+                    Sum("amount")
+                )["amount__sum"]
+                or 0
+            )
+            daily_interest_rate = self.interest_rate / 365
+            daily_interest_amount = invested_amount * daily_interest_rate
+            passed_days = (reference_date - self.issue_date).days
+            gross_expected_interest_amount = daily_interest_amount * passed_days
+            gross_expected_amount = invested_amount + gross_expected_interest_amount
+            return gross_expected_amount
 
-    def gross_expected_amount(self, reference_date):
-        funding = self.cashflows.filter(operation__transaction_type='funding')
-        invested_amount_value = 0
-        for i in funding:
-            invested_amount_value -= i.amount
-        invested_amount = abs(invested_amount_value)
+        except Exception as e:
+            print(f"Error in get_gross_expected_amount: {str(e)}")
+            return 0
 
-        return invested_amount + self.gross_expected_interest_amount(reference_date)
+    def get_remaining_invested_amount(self, reference_date):
+        try:
+            invested_amount = abs(
+                self.cashflows.filter(operation__transaction_type="funding").aggregate(
+                    Sum("amount")
+                )["amount__sum"]
+                or 0
+            )
+            return invested_amount - self.get_realized_amount(reference_date)
+        except Exception as e:
+            print(f"Error in get_remaining_invested_amount: {str(e)}")
+            return 0
 
-    def realized_amount(self, reference_date):
-        reference_date = datetime.strptime(reference_date, "%Y-%m-%d")
-        repayment_values = self.cashflows.filter(operation__transaction_type__icontains='repayment',
-                                                 timestamp__lte=reference_date)
-        realized_amount = sum([cashflow.amount for cashflow in repayment_values])
-        return realized_amount
+    def get_closing_date(self):
+        try:
+            cash_flows_list = list(self.cashflows.all())
+            for cashflow in cash_flows_list:
+                gross_expected_amount = self.get_gross_expected_amount(str(self.maturity_date))
+                if cashflow.operation.transaction_type == "repayment":
+                    realized_amount = self.get_realized_amount(cashflow.timestamp)
+                    if realized_amount >= gross_expected_amount:
+                        return f"{cashflow.timestamp} with the last repayment amount of {cashflow.amount} {cashflow.operation.transaction_type}"
 
-    def remaining_invested_amount(self, reference_date):
-        funding = self.cashflows.filter(operation__transaction_type='funding')
-        invested_amount_value = 0
-        for i in funding:
-            invested_amount_value -= i.amount
-        invested_amount = abs(invested_amount_value)
-        return invested_amount - self.realized_amount(reference_date)
+            return "Loan Not Closed!"
 
-    class Meta:
-        verbose_name_plural = "Trades"
-
-    def __str__(self):
-        return f"Trade: {self.identifier}"
+        except Exception as e:
+            raise Exception(f"Error in get_closing_date: {str(e)}")
 
 
 class Cash_flows(models.Model):
@@ -78,13 +97,6 @@ class Cash_flows(models.Model):
     operation = models.ForeignKey(to="Operators", related_name="operations", on_delete=models.CASCADE)
 
 
-class Operators(models.Model):
-    id = models.AutoField(primary_key=True)
-    transaction_type = models.CharField(max_length=25)
-
-    def __str__(self):
-        return f"{self.transaction_type}"
-
 
 fs = FileSystemStorage(location="./uploads/")
 
@@ -93,3 +105,4 @@ class RawData(models.Model):
     file_id = models.IntegerField(primary_key=True)
     file_title = models.CharField(max_length=255)
     file = models.FileField(storage=fs)
+

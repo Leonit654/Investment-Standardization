@@ -1,3 +1,4 @@
+
 from rest_framework import serializers
 from cardo.models import Cash_flows, Trade, Operators, RawData
 
@@ -38,3 +39,4 @@ class RawDataSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return RawData.objects.create(**validated_data)
+

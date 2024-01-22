@@ -16,19 +16,41 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from cardo.api.views import *
+from cardo.api.views import (
+    GetTradeColumns,
+    GetCashflowColumns,
+    CashflowView,
+    GetStandardFiled,
+    MappingView,
+    RealizedAmountView,
+    GrossExpectedAmountView,
+    RemainingInvestedAmountView,
+    ClosingDateView,
+TradeListView,
+TradeDetailView
 
+)
 urlpatterns = [
     path("trades_columns/", GetTradeColumns.as_view(), name="upload-trade-files"),
     path("cashflow_columns/", GetCashflowColumns.as_view(), name="upload-cashflow-file"),
     path("cashflow_mapping/", CashflowView.as_view(), name="upload-cashflow"),
-    path("trade_standard_fields/", GetTradeStandardFiled.as_view(), name="standard-fields"),
-    path("transaction_standard_fields/", GetTransactionStandardFiled.as_view(), name="standard-fields"),
+
+    path("standard_fields/", GetStandardFiled.as_view(), name="standard-fields"),
+
+    path("realized_amount/<str:identifier>/", RealizedAmountView.as_view(), name="realized-amount"),
+    path("gross_expected_amount/<str:identifier>/", GrossExpectedAmountView.as_view(), name="gross-expected-amount"),
+    path("remaining_invested_amount/<str:identifier>/", RemainingInvestedAmountView.as_view(), name="remaining-invested-amount"),
+    path("closing_date/<str:identifier>/", ClosingDateView.as_view(), name="closing-date"),
+    path('trades/', TradeListView.as_view(), name='trade-list'),
+    path('trade/<str:identifier>/', TradeDetailView.as_view(), name='trade-detail'),
+
+
     path("trade_mapping/", TradeMappingView.as_view(), name="mapping"),
     path("download-trade-data/", DownloadTradeMappingData.as_view(), name="download-trade"),
     path("download-cashflow-data/", DownloadCashflowMappingData.as_view(), name="download-trade"),
     path("upload-raw-data/", UploadRawDataView.as_view(), name="upload-raw-data"),
     path('download-raw-data/', UploadRawDataView.as_view(), name='download_raw_data'),
     path("insert-cardo-operators/", InsertCardoOperatorsView.as_view(), name="cardo_operators"),
+
 
 ]
