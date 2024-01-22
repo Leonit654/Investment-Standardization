@@ -1,5 +1,9 @@
+from decimal import Decimal
+from io import BytesIO
+from cardo.api.serializers import CashFlowWithTransactionTypeSerializer, CashFlowSerializer, OperationSerializer, TradeSerializer,RawDataSerializer
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework.parsers import MultiPartParser
 from cardo.models import Cash_flows, Trade,Operators,RawData
 import json
@@ -9,6 +13,74 @@ from cardo.serializers import *
 from rest_framework.views import APIView
 from cardo.util import Sanitization
 class MappingView(APIView):
+
+from django.db.models import Q
+from django.forms import DecimalField
+from django.http import HttpResponse, FileResponse
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
+from cardo.models import Cash_flows, Trade, Operators, RawData
+from ..sanitization import Sanitization
+from django.shortcuts import get_object_or_404
+import os
+import json
+
+
+class DownloadCashflowMappingData(APIView):
+    def get(self, request, *args, **kwargs):
+        # Retrieve all data from the model
+        queryset = Cash_flows.objects.all()
+
+        # Create a serializer instance for each object in the queryset
+        serializer = CashFlowWithTransactionTypeSerializer(queryset, many=True)
+
+        # Create a DataFrame from the serialized data
+        df = pd.DataFrame(serializer.data)
+        df.drop(columns=['operation'], inplace=True)
+        df.rename(columns={'transaction_type': 'operation'}, inplace=True)
+
+        excel_buffer = BytesIO()
+        df.to_excel(excel_buffer, index=False, engine='xlsxwriter')
+        excel_buffer.seek(0)
+
+        # Set the response headers to force download
+        response = HttpResponse(excel_buffer.read(),
+                                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=CashFlows.xlsx'
+
+        # Close the BytesIO buffer
+        excel_buffer.close()
+
+        return response
+
+
+class DownloadTradeMappingData(APIView):
+    def get(self, request, *args, **kwargs):
+        # Retrieve all data from the model
+        queryset = Trade.objects.all()
+
+        # Create a DataFrame from the model data
+        df = pd.DataFrame.from_records(queryset.values())
+
+        excel_buffer = BytesIO()
+        df.to_excel(excel_buffer, index=False, engine='xlsxwriter')
+        excel_buffer.seek(0)
+
+        # Set the response headers to force download
+        response = HttpResponse(excel_buffer.read(),
+                                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename=Trade.xlsx'
+
+        # Close the BytesIO buffer
+        excel_buffer.close()
+
+        return response
+
+
+class TradeMappingView(APIView):
+
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
@@ -19,23 +91,31 @@ class MappingView(APIView):
 
             trade_mapping = json.loads(request.data.get('trade_mapping', '{}'))
 
+
+
+            print(trade_mapping)
+
+            # Map Excel columns to model fields and save to the database
+
             for index, row in df_trades.iterrows():
                 trade_data = {model_field: row[excel_column] if pd.notna(row[excel_column]) else None
                               for model_field, excel_column in trade_mapping.items()}
+
 
                 trade_data['issue_date'] = pd.to_datetime(trade_data['issue_date'], format='%d/%m/%Y').strftime('%Y-%m-%d')
                 trade_data['maturity_date'] = pd.to_datetime(trade_data['maturity_date'], format='%d/%m/%Y').strftime('%Y-%m-%d')
                 trade_data['interest_rate'] = float(trade_data['interest_rate'].split('%')[0]) / 100
 
+                print(trade_data)
+                trade_data['interest_rate'] = Sanitization.convert_percentage_to_float(trade_data['interest_rate'])
+                trade_data['issue_date'] = Sanitization.format_date(trade_data['issue_date'])
+                trade_data['maturity_date'] = Sanitization.format_date(trade_data['maturity_date'])
+
+
                 trade = Trade(**trade_data)
                 trade.save()
 
             return Response("Trades uploaded successfully", status=200)
-
-
-        else:
-            return Response("Please upload the trades file", status=400)
-
 
 class CashflowView(APIView):
     parser_classes = (MultiPartParser,)
@@ -105,6 +185,8 @@ class CashflowView(APIView):
         except Exception as e:
             print(f"An error occurred while processing the cashflows file: {e}")
             return Response("An error occurred while processing the cashflows file", status=500)
+          
+          
 class GetTradeColumns(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -120,7 +202,13 @@ class GetTradeColumns(APIView):
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
         return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(excel_file_columns, status=status.HTTP_200_OK)
+
+
+
 class GetCashflowColumns(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -136,12 +224,13 @@ class GetCashflowColumns(APIView):
             return Response(excel_file_columns, status=status.HTTP_200_OK)
 
 
-class GetStandardFiled(APIView):
+class GetTradeStandardFiled(APIView):
     def get(self, request):
         standard_data = ['identifier', 'issue_date', 'maturity_date', 'invested_amount', 'debitor_identifier',
                          'seller_identifier']
 
         return Response(standard_data, status=status.HTTP_200_OK)
+
 
 
 
@@ -202,3 +291,55 @@ class TradeDetailView(APIView):
             return Response({"error": "Trade not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class GetTransactionStandardFiled(APIView):
+    def get(self, request):
+        standard_data = ['operation', 'timestamp', 'amount', 'trade_identifier', 'platform_transaction_id',
+                         ]
+
+        return Response(standard_data, status=status.HTTP_200_OK)
+
+
+class UploadRawDataView(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def post(self, request):
+        serializer = RawDataSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(file=request.FILES.get('file'))
+            return Response(serializer.data)
+        return Response(serializer.errors)
+
+    def get(self, request):
+        file_title = request.GET.get("file_title")
+        print(file_title)
+        filename = request.GET.get("filename")
+        print(filename)
+
+        raw_data = get_object_or_404(RawData, file_title=file_title)
+        file_path = raw_data.file.path
+
+        response = FileResponse(open(file_path, 'rb'))
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        return response
+
+class InsertCardoOperatorsView(APIView):
+    def post(self, request, *args, **kwargs):
+        # Data to be inserted
+        transaction_types = [
+            'funding',
+            'deposit',
+            'withdrawal',
+            'general_repayment',
+            'principal_repayment',
+            'interest_repayment',
+        ]
+
+        # Check if each transaction type already exists in the database
+        for transaction_type in transaction_types:
+            if not Operators.objects.filter(transaction_type=transaction_type).exists():
+                Operators.objects.create(transaction_type=transaction_type)
+
+        return HttpResponse("Data inserted successfully.")
+

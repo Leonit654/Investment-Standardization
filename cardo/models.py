@@ -1,4 +1,8 @@
 from datetime import datetime
+
+from decimal import Decimal
+from django.core.files.storage import FileSystemStorage
+
 from django.db import models
 from django.db.models import Sum
 from rest_framework.views import APIView
@@ -7,9 +11,11 @@ from rest_framework import status
 
 
 
+
 class Operators(models.Model):
     id = models.AutoField(primary_key=True)
     transaction_type = models.CharField(max_length=25)
+
 class Trade(models.Model):
     identifier = models.CharField(max_length=100, primary_key=True)
     debtor_identifier = models.CharField(max_length=50, blank=True)
@@ -18,11 +24,9 @@ class Trade(models.Model):
     invested_amount = models.DecimalField(null=True, max_digits=10, decimal_places=2, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
-    class Meta:
-        verbose_name_plural = "Trades"
 
-    def __str__(self):
-        return f"Trade: {self.identifier}"
+
+
 
     def get_realized_amount(self, reference_date):
         try:
@@ -71,8 +75,6 @@ class Trade(models.Model):
 
     def get_closing_date(self):
         try:
-            # ... (unchanged)
-
             cash_flows_list = list(self.cashflows.all())
             for cashflow in cash_flows_list:
                 gross_expected_amount = self.get_gross_expected_amount(str(self.maturity_date))
@@ -86,6 +88,7 @@ class Trade(models.Model):
         except Exception as e:
             raise Exception(f"Error in get_closing_date: {str(e)}")
 
+
 class Cash_flows(models.Model):
     platform_transaction_id = models.CharField(primary_key=True, max_length=75)
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, db_column='trade_identifier', related_name="cashflows")
@@ -95,15 +98,11 @@ class Cash_flows(models.Model):
 
 
 
-
+fs = FileSystemStorage(location="./uploads/")
 
 
 class RawData(models.Model):
-    # Fields for your model
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-
-    # FileField to store a file
-    file = models.FileField(upload_to='raw-data-file/')
-
+    file_id = models.IntegerField(primary_key=True)
+    file_title = models.CharField(max_length=255)
+    file = models.FileField(storage=fs)
 
