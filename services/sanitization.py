@@ -5,16 +5,40 @@ import pandas as pd
 
 class Sanitizer:
 
-    method_mapping = {
+    type_conversion_method_mapping = {
         "float": "process_float",
         "percentage": "process_percentage",
-        "date": "process_date"
+        "date": "process_date",
+        "str": "process_string"
     }
 
-    def __init__(self, df, data_type_mapping, columns_to_keep):
+    def __init__(self, df, data_type_mapping=None, columns_to_keep=None, columns_to_rename=None):
+
+        if data_type_mapping is None:
+            data_type_mapping = {}
+        if columns_to_rename is None:
+            columns_to_rename = {}
+
         self.df = df
         self.data_type_mapping: dict = data_type_mapping
         self.columns_to_keep = columns_to_keep
+        self.columns_to_rename = columns_to_rename
+
+    def rename_columns(self):
+        self.df = self.df.rename(columns={value: key for key, value in self.columns_to_rename.items()})
+
+    def convert_data_types(self):
+        for data_type, columns in self.data_type_mapping.items():
+            method_name = self.type_conversion_method_mapping[data_type]
+            for column in columns:
+                self.df[column] = self.df[column].apply(getattr(self, method_name))
+
+    def keep_columns(self):
+        if self.columns_to_keep:
+            self.df = self.df[self.columns_to_keep]
+
+    def to_dict(self):
+        return self.df.to_dict(orient="records")
 
     @staticmethod
     def process_float(value):
@@ -36,9 +60,18 @@ class Sanitizer:
     def process_date(value):
         return pd.to_datetime(value, format='%d/%m/%Y')
 
+    @staticmethod
+    def process_string(value):
+
+        if pd.isna(value) or (str(value).strip() == ""):
+            return None
+
+        if isinstance(value, float) and int(value) == value:
+            value = int(value)
+
+        return str(value)
+
     def run(self):
-        for key, method_name in self.method_mapping.items():
-            columns = self.data_type_mapping[key]
-            for column in columns:
-                self.df[column] = self.df[column].apply(getattr(self, method_name))
-        self.df = self.df[self.columns_to_keep]
+        self.rename_columns()
+        self.convert_data_types()
+        self.keep_columns()

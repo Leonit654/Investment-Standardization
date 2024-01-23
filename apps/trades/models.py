@@ -11,13 +11,7 @@ class Trade(TimeStamp):
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
 
     @classmethod
-    def get_field_names(cls):
-        return [f.name for f in cls._meta.get_fields() if f.name not in ["created_at", "updated_at", "id", "cash_flows"]]
+    def create(cls, data):
+        trades = [cls(**row) for row in data]
+        cls.objects.bulk_create(trades)
 
-    @staticmethod
-    def get_field_types():
-        return {
-            "date": ["issue_date", "maturity_date"],
-            "percentage": ["interest_rate"],
-            "float": ["invested_amount"]
-        }
