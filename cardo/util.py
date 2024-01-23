@@ -6,6 +6,7 @@ from cardo.models import Cash_flows, Trade, Operators
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import DecimalField
 
+
 class Sanitization:
     @staticmethod
     def get_trade(identifier):
@@ -36,9 +37,6 @@ class Sanitization:
     def get_model_field_type(field_name):
         return Cash_flows._meta.get_field(field_name).__class__
 
-
-
-
     @staticmethod
     def format_date(date_str, output_format='%Y-%m-%d'):
         try:
@@ -58,7 +56,6 @@ class Sanitization:
         except (ValueError, IndexError):
             print(f"Invalid percentage format: {percentage_str}")
             return None
-
 
     @staticmethod
     def clean_and_convert_fields(row, mapping):
@@ -96,7 +93,3 @@ class Sanitization:
         except ValueError:
             print(f"Invalid amount value: '{cleaned_value}'. Unable to convert to float.")
             return None
-
-
-
-
