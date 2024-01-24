@@ -22,7 +22,6 @@ class ObjectCreator:
 
         created_objects = []
 
-        # List to hold instances before bulk_create
         instances_to_create = []
 
         for row in data:
@@ -38,11 +37,9 @@ class ObjectCreator:
             else:
                 obj_data = {**current_row_data, **additional_data}
 
-            # Create an instance but don't save it yet
             instance = model_class(**obj_data)
             instances_to_create.append(instance)
 
-        # Save the instances in a single bulk_create operation
         model_class.objects.bulk_create(instances_to_create)
         created_objects.extend(instances_to_create)
 

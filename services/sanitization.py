@@ -9,7 +9,9 @@ class Sanitizer:
         "float": "process_float",
         "percentage": "process_percentage",
         "date": "process_date",
-        "str": "process_string"
+        "str": "process_string",
+        "integer": "process_integer",
+        "boolean": "process_boolean",
     }
 
     def __init__(self, df, data_type_mapping=None, columns_to_keep=None, columns_to_rename=None):
@@ -23,6 +25,20 @@ class Sanitizer:
         self.data_type_mapping: dict = data_type_mapping
         self.columns_to_keep = columns_to_keep
         self.columns_to_rename = columns_to_rename
+
+
+    @staticmethod
+    def process_integer(value):
+        if pd.isna(value) or (str(value).strip() == ""):
+            return None
+        return int(value)
+
+    @staticmethod
+    def process_boolean(value):
+        if pd.isna(value) or (str(value).strip() == ""):
+            return None
+        return str(value).lower() in ['true', 'yes', '1']
+
 
     def rename_columns(self):
         self.df = self.df.rename(columns=self.columns_to_rename)
