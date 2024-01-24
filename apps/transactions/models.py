@@ -34,4 +34,21 @@ class CashFlow(Transaction):
 
 
 class CashOrder(Transaction):
-    pass
+    identifier = identifier = models.CharField(max_length=75)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+    cash_flow_type = models.ForeignKey(CashFlowType, on_delete=models.CASCADE)
+
+    @classmethod
+    def create(cls, data):
+        cash_orders = []
+        for row in data:
+            cash_flow_type_value = row.pop("cash_flow_type", None)
+            if cash_flow_type_value is not None:
+                cash_flow_type = CashFlowType.objects.get(value=cash_flow_type_value)
+                cash_orders.append(cls(cash_flow_type=cash_flow_type, **row))
+
+        cls.objects.bulk_create(cash_orders)
+
+
+
