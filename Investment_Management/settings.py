@@ -38,11 +38,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
+    'corsheaders',
+
     "cardo",
-
-    'corsheaders'
-
+    "apps.trades",
+    "apps.transactions",
+    "apps.common"
 ]
+
 MEDIA_URL = '/media/raw-data-files/'
 MEDIA_ROOT = BASE_DIR / "media/raw-data-files"
 MIDDLEWARE = [
