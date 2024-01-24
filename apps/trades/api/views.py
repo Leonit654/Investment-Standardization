@@ -17,5 +17,5 @@ class TradeMappingView(APIView):
         synchronizer = Synchronizer(file, file_type="trade", columns_to_rename=column_mapping)
         df = synchronizer.run()
 
-        Trade.create(df.to_dict(orient="records"))
+        # Trade.create(df.to_dict(orient="records"))
         return Response("Trades uploaded successfully", status=200)

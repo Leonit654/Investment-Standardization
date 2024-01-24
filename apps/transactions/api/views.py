@@ -19,11 +19,9 @@ class CashFlowView(APIView):
             file,
             file_type="cash_flow",
             columns_to_rename=column_mapping,
+            additional_data=cash_flow_type_mapping
         )
         df = synchronizer.run()
-        cash_flows_df = df[~df["trade_identifier"].isna()]
-        cash_orders_df = df[df["trade_identifier"].isna()]
-        CashFlow.create(cash_flows_df.to_dict(orient="records"), cash_flow_type_mapping)
         return Response("Cash flows uploaded successfully", status=200)
 
 
