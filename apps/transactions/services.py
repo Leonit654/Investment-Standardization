@@ -3,5 +3,5 @@ CASH_FLOW_COLUMNS = {
     "trade_identifier": "str",
     "amount": "float",
     "date": "date",
-    "cash_flow_type": "str",
+    "cashflow_type": "str",
 }

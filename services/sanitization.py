@@ -25,7 +25,7 @@ class Sanitizer:
         self.columns_to_rename = columns_to_rename
 
     def rename_columns(self):
-        self.df = self.df.rename(columns={value: key for key, value in self.columns_to_rename.items()})
+        self.df = self.df.rename(columns=self.columns_to_rename)
 
     def convert_data_types(self):
         for data_type, columns in self.data_type_mapping.items():

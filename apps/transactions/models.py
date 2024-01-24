@@ -9,7 +9,7 @@ class CashFlowType(TimeStamp):
 
 
 class Transaction(TimeStamp):
-    identifier = models.CharField(max_length=75)
+    identifier = models.CharField(max_length=75, unique=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
 
@@ -23,11 +23,11 @@ class CashFlow(Transaction):
 
     @classmethod
     def create(cls, data, cash_flow_type_mapping):
-        cash_flow_type_mapping = {v: k for k, v in cash_flow_type_mapping.items()}
+
         cash_flows = []
         for row in data:
             trade = Trade.objects.get(identifier=row.pop("trade_identifier"))
-            cash_flow_type = cash_flow_type_mapping[row.pop("cash_flow_type")]
+            cash_flow_type = cash_flow_type_mapping[row.pop("cashflow_type")]
             cash_flow_type = CashFlowType.objects.get(value=cash_flow_type)
             cash_flows.append(cls(trade=trade, cash_flow_type=cash_flow_type, **row))
         cls.objects.bulk_create(cash_flows)
