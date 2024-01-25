@@ -2,6 +2,8 @@
 
 import pandas as pd
 
+from services.utils import adjust_condition, get_pandas_mask
+
 
 class Sanitizer:
 
@@ -14,8 +16,17 @@ class Sanitizer:
         "boolean": "process_boolean",
     }
 
-    def __init__(self, df, data_type_mapping=None, columns_to_keep=None, columns_to_rename=None):
+    def __init__(
+            self,
+            df,
+            data_type_mapping=None,
+            columns_to_keep=None,
+            columns_to_rename=None,
+            values_to_replace=None
+    ):
 
+        if values_to_replace is None:
+            values_to_replace = []
         if data_type_mapping is None:
             data_type_mapping = {}
         if columns_to_rename is None:
@@ -25,7 +36,7 @@ class Sanitizer:
         self.data_type_mapping: dict = data_type_mapping
         self.columns_to_keep = columns_to_keep
         self.columns_to_rename = columns_to_rename
-
+        self.values_to_replace = values_to_replace
 
     @staticmethod
     def process_integer(value):
@@ -39,7 +50,6 @@ class Sanitizer:
             return None
         return str(value).lower() in ['true', 'yes', '1']
 
-
     def rename_columns(self):
         self.df = self.df.rename(columns=self.columns_to_rename)
 
@@ -52,6 +62,14 @@ class Sanitizer:
     def keep_columns(self):
         if self.columns_to_keep:
             self.df = self.df[self.columns_to_keep]
+
+    def replace_values(self):
+        for value_to_replace in self.values_to_replace:
+            column_name = value_to_replace["column_name"]
+            new_value = value_to_replace["value"]
+            condition = value_to_replace["condition"]
+            mask = get_pandas_mask(self.df, condition)
+            self.df.loc[mask, column_name] = new_value
 
     def to_dict(self):
         return self.df.to_dict(orient="records")
@@ -91,3 +109,4 @@ class Sanitizer:
         self.rename_columns()
         self.convert_data_types()
         self.keep_columns()
+        self.replace_values()

@@ -8,17 +8,11 @@ class CashFlowType(TimeStamp):
     value = models.CharField(max_length=25)
 
 
-class Transaction(TimeStamp):
+class CashFlow(TimeStamp):
+    trade = models.ForeignKey("trades.Trade", related_name="cash_flows", on_delete=models.CASCADE, null=True)
     identifier = models.CharField(max_length=75, unique=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
     date = models.DateField()
-
-    class Meta:
-        abstract = True
-
-
-class CashFlow(Transaction):
-    trade = models.ForeignKey("trades.Trade", related_name="cash_flows", on_delete=models.CASCADE)
     cash_flow_type = models.ForeignKey("CashFlowType", related_name="cash_flows", on_delete=models.CASCADE)
 
     @classmethod
@@ -31,7 +25,3 @@ class CashFlow(Transaction):
             cash_flow_type = CashFlowType.objects.get(value=cash_flow_type)
             cash_flows.append(cls(trade=trade, cash_flow_type=cash_flow_type, **row))
         cls.objects.bulk_create(cash_flows)
-
-
-class CashOrder(Transaction):
-    pass
