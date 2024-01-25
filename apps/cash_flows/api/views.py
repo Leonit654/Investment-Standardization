@@ -5,7 +5,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.common.serializers import CashFlowInputSerializer
+from apps.common.serializers import InputSerializer
 from services.synchronizer import Synchronizer
 
 
@@ -13,7 +13,7 @@ class CashFlowView(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
-        serializer = CashFlowInputSerializer(data=request.data)
+        serializer = InputSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

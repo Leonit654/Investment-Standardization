@@ -49,6 +49,9 @@ class Synchronizer:
             values_to_replace=self.values_to_replace,
         )
         sanitizer.run()
-        # TODO: Use serializer to validate data and crate Trade and CashFlow
-        ObjectCreator.create_objects(self.file_type, sanitizer.df.to_dict('records'))
-        return sanitizer.df
+        data = sanitizer.to_dict()
+        data_to_save = TradeSerializer(data=data, many=True)
+        if data_to_save.is_valid():
+            data_to_save.save()
+        else:
+            print("Validation error:", data_to_save.errors)
