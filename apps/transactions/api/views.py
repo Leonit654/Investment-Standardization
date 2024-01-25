@@ -22,13 +22,14 @@ class CashFlowView(APIView):
             columns_to_rename=column_mapping,
         )
         df = synchronizer.run()
-        cash_flow_synchronizer =CashFlowSynchronizer(file,file_type="cash_flow",columns_to_rename=column_mapping,df=df)
-        cash_flows_df = cash_flow_synchronizer.filtered_cash_flow_type_dataframe(column_name="trade_identifier",is_na=True)
-        cash_orders_df = cash_flow_synchronizer.filtered_cash_flow_type_dataframe(column_name="cash_flow_type",filter="cash_order",is_na=False)
+        cash_flow_synchronizer = CashFlowSynchronizer(file, file_type="cash_flow", columns_to_rename=column_mapping,
+                                                      df=df)
+        cash_flows_df = cash_flow_synchronizer.filtered_cash_flow_type_dataframe(column_name="trade_identifier",
+                                                                                 is_na=True)
+        cash_orders_df = cash_flow_synchronizer.filtered_cash_flow_type_dataframe(column_name="cash_flow_type",
+                                                                                  filter="cash_order", is_na=False)
         CashFlow.create(cash_flows_df.to_dict(orient="records"), cash_flow_type_mapping)
-        cash_orders_df=cash_flow_synchronizer.cash_order_df()
+        cash_orders_df = cash_flow_synchronizer.cash_order_df()
         CashOrder.create(cash_orders_df.to_dict(orient="records"))
 
         return Response("Cash flows uploaded successfully", status=200)
-
-

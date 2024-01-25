@@ -14,7 +14,6 @@ class Synchronizer:
     }
 
     def __init__(self, file, file_type: Literal["cash_flow", "trade"], columns_to_rename=None):
-
         if columns_to_rename is None:
             columns_to_rename = {}
 
