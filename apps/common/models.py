@@ -1,4 +1,8 @@
+from django.core.files.storage import FileSystemStorage
 from django.db import models
+
+
+fs = FileSystemStorage(location="./uploads/")
 
 
 class TimeStamp(models.Model):
@@ -7,3 +11,8 @@ class TimeStamp(models.Model):
 
     class Meta:
         abstract = True
+
+
+class RawData(TimeStamp):
+    file_title = models.CharField(max_length=255, unique=True)
+    file = models.FileField(storage=fs)

@@ -1,6 +1,5 @@
 import json
 
-from pandas.core.methods.to_dict import to_dict
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -16,6 +15,5 @@ class TradeMappingView(APIView):
         file = request.FILES.get('file')
         column_mapping = json.loads(request.data.get('column_mapping', None))
         synchronizer = Synchronizer(file, file_type="trade", columns_to_rename=column_mapping)
-        df = synchronizer.run()
-        Trade.create(data=df.to_dict(orient="records"))
+        synchronizer.run()
         return Response("Trades uploaded successfully", status=200)
