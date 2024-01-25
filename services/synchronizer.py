@@ -1,7 +1,9 @@
 from typing import Literal
 
+from apps.cash_flows.api.serializers import CashFlowSerializer
+from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
-from apps.transactions.services import CASH_FLOW_COLUMNS
+from apps.cash_flows.services import CASH_FLOW_COLUMNS
 from services.file_reader import FileReader
 from services.object_creation import ObjectCreator
 from services.sanitization import Sanitizer
@@ -14,15 +16,23 @@ class Synchronizer:
         "trade": TRADE_COLUMNS
     }
 
-    def __init__(self, file, file_type: Literal["cash_flow", "trade"], columns_to_rename=None,additional_data={}):
+    serializer_mapping = {
+        "cash_flow": CashFlowSerializer,
+        "trade": TradeSerializer
+    }
 
+    def __init__(self, file, file_type: Literal["cash_flow", "trade"], columns_to_rename=None, values_to_replace=None):
+
+        if values_to_replace is None:
+            values_to_replace = {}
         if columns_to_rename is None:
             columns_to_rename = {}
 
         self.file = file
         self.file_type = file_type
         self.columns_to_rename = columns_to_rename
-        self.additional_data = additional_data
+        self.values_to_replace = values_to_replace
+
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
 
@@ -35,8 +45,10 @@ class Synchronizer:
             df,
             data_type_mapping=self.get_data_type_mapping(),
             columns_to_keep=self.get_columns(),
-            columns_to_rename=self.columns_to_rename
+            columns_to_rename=self.columns_to_rename,
+            values_to_replace=self.values_to_replace,
         )
         sanitizer.run()
-        ObjectCreator.create_objects(self.file_type, sanitizer.df.to_dict('records'), self.additional_data)
+        # TODO: Use serializer to validate data and crate Trade and CashFlow
+        ObjectCreator.create_objects(self.file_type, sanitizer.df.to_dict('records'))
         return sanitizer.df

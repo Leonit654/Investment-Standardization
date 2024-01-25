@@ -40,10 +40,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 
-    "cardo",
     "apps.trades",
-    "apps.transactions",
-    "apps.common"
+    "apps.cash_flows",
+    "apps.common",
 ]
 
 MEDIA_URL = '/media/raw-data-files/'
