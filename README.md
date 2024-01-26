@@ -2,6 +2,62 @@
 
 This guide provides steps to synchronize trade and cashflow data using the provided methods.
 
+## Steps to set up and run the project
+
+- **Setup:**
+  - Use Git Bash or any terminal and run the command: 
+    ```
+    git clone https://github.com/Leonit654/Investment-Standardization.git
+    ```
+
+- **Creating virtual environment:**
+  - After cloning the project, use PyCharm, Visual Studio Code, or any editor that supports Python programming. 
+    After opening the project, open any terminal and run the command: 
+    ```
+    python -m venv venv
+    ```
+
+- **Activating virtual environment:**
+  - for Windows users: 
+    ```
+    venv/Scripts/activate
+    ```
+  - for Linux users: 
+    ```
+    source activate
+    ```
+
+- **Installing required libraries:**
+  - After activating venv, use the command 
+    ```
+    pip install -r requirements.txt
+    ``` 
+    to install required libraries.
+
+- **Migrate database:**
+  - Use commands 
+    ```
+    python manage.py makemigrations
+    ```
+    and 
+    ```
+    python manage.py migrate
+    ```
+    to define tables of the database.
+
+- **Inserting standard data:**
+  - To insert the standard data, use the command: 
+    ```
+    python execute_sql_script.py
+    ```
+
+- **Running the project:**
+  - To run the project, use the command: 
+    ```
+    python manage.py runserver
+    ```
+    and you should be able to use the project.
+
 ## Synchronize Trades (Qkuk Data)
 
 ### Method: POST
