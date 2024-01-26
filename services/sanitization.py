@@ -75,16 +75,16 @@ class Sanitizer:
         return self.df.to_dict(orient="records")
 
     @staticmethod
-    def process_float(value):
+    def process_float(value, decimal_places=None):
         if pd.isna(value) or (str(value).strip() == ""):
             return None
-        if isinstance(value, float):
-            return value
-        if isinstance(value, int):
+        if isinstance(value, str):
+            value = value.translate(str.maketrans({",": "", " ": ""}))
+
+        if decimal_places is None:
             return float(value)
 
-        value = str(value).translate(str.maketrans({",": "", " ": ""}))
-        return round(float(value), 6)
+        return round(float(value), decimal_places)
 
     @staticmethod
     def process_percentage(value):
@@ -92,7 +92,7 @@ class Sanitizer:
 
     @staticmethod
     def process_date(value):
-        return pd.to_datetime(value, format='%d/%m/%Y')
+        return pd.to_datetime(value, format='%d/%m/%Y').date()
 
     @staticmethod
     def process_string(value):

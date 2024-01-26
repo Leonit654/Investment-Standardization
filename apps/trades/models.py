@@ -8,7 +8,7 @@ class Trade(TimeStamp):
     issue_date = models.DateField(null=True, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
     invested_amount = models.DecimalField(null=True, max_digits=10, decimal_places=2, blank=True)
-    interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    interest_rate = models.FloatField()
 
     @classmethod
     def create(cls, data):

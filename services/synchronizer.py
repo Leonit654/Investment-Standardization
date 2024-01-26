@@ -48,7 +48,23 @@ class Synchronizer:
             columns_to_rename=self.columns_to_rename,
             values_to_replace=self.values_to_replace,
         )
+
         sanitizer.run()
         # TODO: Use serializer to validate data and crate Trade and CashFlow
-        ObjectCreator.create_objects(self.file_type, sanitizer.df.to_dict('records'))
+        serializer_class = self.serializer_mapping[self.file_type]
+
+        serializer = serializer_class(data=sanitizer.df.to_dict(orient="records"), many=True)
+        if serializer.is_valid():
+            serializer.save()
+            serializer.bulk_create(serializer)
+        else:
+            print(serializer.errors)
+
+
+        # if serializer.is_valid():
+        #     # Call the bulk_create method
+        #     cash_flows_created = serializer.bulk_create(serializer.validated_data)
+        #     print("Cash flows created successfully:", cash_flows_created)
+        # else:
+        #     print("Data is not valid:", serializer.errors)
         return sanitizer.df

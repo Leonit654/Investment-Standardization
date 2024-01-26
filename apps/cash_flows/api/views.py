@@ -5,6 +5,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.cash_flows.models import CashFlow
 from apps.common.serializers import CashFlowInputSerializer
 from services.synchronizer import Synchronizer
 
@@ -17,13 +18,15 @@ class CashFlowView(APIView):
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        CashFlow.objects.all().delete()
         synchronizer = Synchronizer(
             serializer.validated_data["file"],
             file_type="cash_flow",
             columns_to_rename=serializer.validated_data["column_mapping"],
             values_to_replace=serializer.validated_data["values_to_replace"]
         )
+
+
         synchronizer.run()
 
         return Response("Cash flows uploaded successfully", status=200)
