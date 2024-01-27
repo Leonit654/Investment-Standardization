@@ -72,6 +72,7 @@ class Sanitizer:
             self.df.loc[mask, column_name] = new_value
 
     def to_dict(self):
+
         return self.df.to_dict(orient="records")
 
     @staticmethod
@@ -92,7 +93,7 @@ class Sanitizer:
 
     @staticmethod
     def process_date(value):
-        return pd.to_datetime(value, format='%d/%m/%Y')
+        return pd.to_datetime(value, format='%d/%m/%Y').date()
 
     @staticmethod
     def process_string(value):

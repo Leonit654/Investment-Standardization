@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from apps.trades.models import Trade
 from apps.cash_flows.models import CashFlow, CashFlowType
 from apps.trades.api.serializers import TradeSerializer
 
@@ -7,13 +7,23 @@ from apps.trades.api.serializers import TradeSerializer
 class CashFlowTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CashFlowType
-        fields = '__all__'
+        fields = ['id', 'value']
 
 
 class CashFlowSerializer(serializers.ModelSerializer):
-    trade = TradeSerializer(read_only=True, source="trade_identifier")
-    cash_flow_type = CashFlowTypeSerializer(read_only=True, many=True)
+    trade_identifier = serializers.SlugRelatedField(queryset=Trade.objects.all(), allow_null=True, required=False,
+                                                    slug_field='identifier')
+    cash_flow_type = serializers.SlugRelatedField(
+        slug_field='value',
+        queryset=CashFlowType.objects.all(),
+    )
 
     class Meta:
         model = CashFlow
-        fields = ["trade", "identifier", "amount", "date", "cash_flow_type"]
+        fields = ["identifier", "trade_identifier", "amount", "date", "cash_flow_type"]
+
+    def create(self, validated_data):
+        trade_identifier = validated_data.pop('trade_identifier')
+        trade_instance = Trade.objects.get(identifier=trade_identifier)
+        cash_flow = CashFlow.objects.create(trade=trade_instance, **validated_data)
+        return cash_flow

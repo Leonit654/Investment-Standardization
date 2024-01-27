@@ -3,4 +3,5 @@ from apps.trades.api.views import *
 
 urlpatterns = [
     path("synchronize/", TradeMappingView.as_view(), name="synchronize"),
+    path("synchronize/all-in-one/", TradesWithCashflowView.as_view(), name="synchronize-all-in-one"),
 ]

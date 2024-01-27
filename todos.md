@@ -10,9 +10,9 @@
 6. Add a `CashFlowSerializer` and `TradeSerializer` to validate sanitized data and create cash flows and trades in the 
    database respectively 
 
-5. Create only new rows from the same file
-6. Read excel with separate sheets for trades and cash flows
-7. Synchronize sme_finance and growth-lending 
-8. Include trade formulas in new trade django model (`apps.trades.models`)
-9. Add a django command `load_initial_data` which loads cash flow types and add it to README
-10. Improve README by adding instructions to clone repo, create venv, install packages, load initial data, runserver
+7. Create only new rows from the same file
+8. Read excel with separate sheets for trades and cash flows
+9. Synchronize sme_finance and growth-lending 
+10. Include trade formulas in new trade django model (`apps.trades.models`)
+11. Add a django command `load_initial_data` which loads cash flow types and add it to README
+12. Improve README by adding instructions to clone repo, create venv, install packages, load initial data, runserver
