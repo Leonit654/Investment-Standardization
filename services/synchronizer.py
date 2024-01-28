@@ -56,8 +56,9 @@ class Synchronizer:
                 self._process_sheet(df, sheet_file_type, sheet_name)
 
     def _process_sheet(self, df, sheet_file_type, sheet_name=None):
-        self.file_type = sheet_file_type
-        columns_to_rename = self.columns_to_rename.get(self.file_type, {})
+        self.file_type = sheet_file_type if sheet_name is not None else self.file_type
+        columns_to_rename = self.columns_to_rename.get(self.file_type,
+                                                       {}) if sheet_name is not None else self.columns_to_rename
         sanitizer = Sanitizer(
             df,
             data_type_mapping=self.get_data_type_mapping(),
