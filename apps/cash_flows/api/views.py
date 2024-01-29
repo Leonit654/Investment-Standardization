@@ -25,8 +25,6 @@ class CashFlowView(APIView):
             columns_to_rename=serializer.validated_data["column_mapping"],
             values_to_replace=serializer.validated_data["values_to_replace"]
         )
-
-
         synchronizer.run()
 
         return Response("Cash flows uploaded successfully", status=200)

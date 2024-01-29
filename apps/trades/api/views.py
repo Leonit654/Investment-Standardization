@@ -21,7 +21,7 @@ class TradeMappingView(APIView):
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        Trade.objects.all().delete()
         synchronizer = Synchronizer(
             file=serializer.validated_data["file"],
             file_type="trade",

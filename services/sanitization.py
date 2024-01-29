@@ -38,6 +38,9 @@ class Sanitizer:
         self.columns_to_rename = columns_to_rename
         self.values_to_replace = values_to_replace
 
+    def clear_column_spaces(self):
+        self.df.columns = [col.strip() for col in self.df.columns]
+
     @staticmethod
     def process_integer(value):
         if pd.isna(value) or (str(value).strip() == ""):
@@ -106,6 +109,7 @@ class Sanitizer:
         return str(value)
 
     def run(self):
+        self.clear_column_spaces()
         self.rename_columns()
         self.convert_data_types()
         self.keep_columns()
