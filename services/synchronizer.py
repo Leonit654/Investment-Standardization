@@ -56,7 +56,7 @@ class Synchronizer:
         serializer = serializer_class(data=sanitizer.df.to_dict(orient="records"), many=True)
         if serializer.is_valid():
             serializer.save()
-            serializer.bulk_create(serializer)
+            # serializer.bulk_create(serializer)
         else:
             print(serializer.errors)
 
