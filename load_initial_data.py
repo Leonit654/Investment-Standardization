@@ -12,10 +12,12 @@ INSERT INTO cash_flows_cashflowtype (value, created_at, updated_at) VALUES
   ('withdrawal', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('general_repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('principal_repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('interest_repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 """
 
-def execute_sql_script():
+
+def load_initial_data():
     try:
         # Connect to the SQLite database
         connection = sqlite3.connect(db_file)
@@ -35,5 +37,6 @@ def execute_sql_script():
     except Exception as e:
         print(f"Error executing SQL script: {e}")
 
+
 if __name__ == "__main__":
-    execute_sql_script()
+    load_initial_data()

@@ -48,7 +48,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Inserting standard data:**
   - To insert the standard data, use the command: 
     ```
-    python execute_sql_script.py
+    python load_initial_data.py
     ```
 
 - **Running the project:**
@@ -58,7 +58,9 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     ```
     and you should be able to use the project.
 
-## Synchronize Trades (Qkuk Data)
+# Synchronize Trades 
+
+## Qkuk Data:
 
 ### Method: POST
 ### URL: http://127.0.0.1:8000/trades/synchronize/
@@ -67,19 +69,47 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Key: file**
   - **Value:** Your trade file
 
+- **Key: file_title**
+  - **Value:** Your file title
+
 - **Key: column_mapping**
   - **Value:** 
     ```json
     {
-        "identifier": "loan_id",
-        "issue_date": "issue_date",
-        "maturity_date": "maturity_date",
-        "invested_amount": "purchase_amount",
-        "interest_rate": "interest_rate_exp"
+    "loan_id": "identifier",
+    "issue_date": "issue_date",
+    "maturity_date": "maturity_date",
+    "purchase_amount": "invested_amount",
+    "interest_rate_exp": "interest_rate"
+    }
+    ```
+## Skurs Data:
+
+### Method: POST
+### URL: http://127.0.0.1:8000/trades/synchronize/
+
+#### Request Body (form-data):
+- **Key: file**
+  - **Value:** Your trade file
+
+- **Key: file_title**
+  - **Value:** Your file title
+
+- **Key: column_mapping**
+  - **Value:** 
+    ```json
+    {
+    "trade_id": "identifier",
+    "trade_receivable_date": "issue_date",
+    "due_date": "maturity_date",
+    " trade_receivable_amount ": "invested_amount",
+    "interest_rate_exp": "interest_rate"
     }
     ```
 
-## Synchronize Cashflows(Qkuk data)
+# Synchronize Cashflows
+
+## Qkuk Data:
 
 ### Method: POST
 ### URL: http://127.0.0.1:8000/cash_flows/synchronize/
@@ -88,15 +118,18 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Key: file**
   - **Value:** Your cashflow file
 
+- **Key: file_title**
+  - **Value:** Your file title
+
 - **Key: column_mapping**
   - **Value:**
     ```json
     {
-        "cash_flow_type": "cashflow_type",
-        "date": "cashflow_date",
-        "amount": "amount",
-        "trade_identifier": "loan_identifier",
-        "identifier": "identifier"
+    "cashflow_type": "cash_flow_type",
+    "cashflow_date": "date",
+    "amount": "amount",
+    "loan_identifier": "trade_identifier",
+    "identifier": "identifier"
     }
     ```
 
@@ -110,3 +143,62 @@ This guide provides steps to synchronize trade and cashflow data using the provi
         "cash_order": "cash_order"
     }
     ```
+
+- **Key: values_to_replace**
+  - **Value:**
+    ```json
+    [
+      {
+          "column_name": "cash_flow_type",
+          "value": "withdrawal",
+          "condition": [
+              {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
+              {"column_name": "amount", "operator": "<", "value": 0}
+          ]
+      },
+      {
+          "column_name": "cash_flow_type",
+          "value": "deposit",
+          "condition": [
+              {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
+              {"column_name": "amount", "operator": ">", "value": 0}
+          ]
+      }
+    ]
+    ```
+## Skurs Data:
+
+### Method: POST
+### URL: http://127.0.0.1:8000/cash_flows/synchronize/
+
+#### Request Body (form-data):
+- **Key: file**
+  - **Value:** Your cashflow file
+
+- **Key: file_title**
+  - **Value:** Your file title
+
+- **Key: column_mapping**
+  - **Value:**
+    ```json
+    {
+    "cashflow_type": "cash_flow_type",
+    "cashflow_date": "date",
+    "amount": "amount",
+    "trade_id": "trade_identifier",
+    "cashflow_id": "identifier"
+    }
+    ```
+
+- **Key: cash_flow_type_mapping**
+  - **Value:**
+    ```json
+    {
+    "funding": "funding",
+    "principal_repayment": "principal_repayment",
+    "interest_repayment": "interest_repayment",
+    "deposit":"deposit",
+    "withdrawal":"withdrawal"
+    }
+    ```
+    

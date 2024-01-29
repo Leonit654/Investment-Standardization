@@ -68,7 +68,7 @@ class Synchronizer:
         )
         sanitizer.run()
         data = sanitizer.to_dict()
-        serializer_class = self.serializer_mapping.get(sheet_file_type)
+        serializer_class = self.serializer_mapping.get(self.file_type)
         if serializer_class:
             serializer = serializer_class(data=data, many=True)
             if serializer.is_valid():
