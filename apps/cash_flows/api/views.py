@@ -18,7 +18,6 @@ class CashFlowView(APIView):
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        CashFlow.objects.all().delete()
         synchronizer = Synchronizer(
             serializer.validated_data["file"],
             file_type="cash_flow",
