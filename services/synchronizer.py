@@ -5,7 +5,6 @@ from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
 from services.file_reader import FileReader
-from services.object_creation import ObjectCreator
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 
@@ -21,9 +20,10 @@ class Synchronizer:
         "trade": TradeSerializer
     }
 
-    def __init__(self, file, file_type: Literal["cash_flow", "trade"] = None, columns_to_rename=None,
-                 values_to_replace=None,
-                 multiple_sheets=None):
+    def __init__(
+            self, file, file_type: Literal["cash_flow", "trade"] = None, columns_to_rename=None,
+            values_to_replace=None,
+            multiple_sheets=None):
 
         if multiple_sheets is None:
             multiple_sheets = {}
@@ -57,8 +57,9 @@ class Synchronizer:
 
     def _process_sheet(self, df, sheet_file_type, sheet_name=None):
         self.file_type = sheet_file_type if sheet_name is not None else self.file_type
-        columns_to_rename = self.columns_to_rename.get(self.file_type,
-                                                       {}) if sheet_name is not None else self.columns_to_rename
+        columns_to_rename = self.columns_to_rename.get(
+            self.file_type,
+            {}) if sheet_name is not None else self.columns_to_rename
         sanitizer = Sanitizer(
             df,
             data_type_mapping=self.get_data_type_mapping(),

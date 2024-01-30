@@ -2,11 +2,10 @@
 
 import pandas as pd
 
-from services.utils import adjust_condition, get_pandas_mask
+from services.utils import get_pandas_mask
 
 
 class Sanitizer:
-
     type_conversion_method_mapping = {
         "float": "process_float",
         "percentage": "process_percentage",
@@ -101,6 +100,7 @@ class Sanitizer:
         except (ValueError, TypeError):
             # If the conversion fails, assume it's a percentage string and extract the float value
             return float(value.split('%')[0]) / 100
+
     @staticmethod
     def process_date(value):
         return pd.to_datetime(value, format='%d/%m/%Y').date()
