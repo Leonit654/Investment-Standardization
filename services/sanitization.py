@@ -1,5 +1,5 @@
 import pandas as pd
-from services.utils import adjust_condition, get_pandas_mask
+from services.utils import adjust_condition, get_pandas_mask, pandas_merge
 
 
 class Sanitizer:
@@ -19,7 +19,8 @@ class Sanitizer:
             data_type_mapping=None,
             columns_to_keep=None,
             columns_to_rename=None,
-            values_to_replace=None
+            values_to_replace=None,
+            merge_columns_config=None
     ):
 
         if values_to_replace is None:
@@ -28,13 +29,25 @@ class Sanitizer:
             data_type_mapping = {}
         if columns_to_rename is None:
             columns_to_rename = {}
+        if merge_columns_config is None:
+            merge_columns_config = {}
 
         self.df = df
         self.data_type_mapping: dict = data_type_mapping
         self.columns_to_keep = columns_to_keep
         self.columns_to_rename = columns_to_rename
         self.values_to_replace = values_to_replace
+        self.merge_columns_config = merge_columns_config
 
+    def clear_column_spaces(self):
+        self.df.columns = [col.strip() for col in self.df.columns]
+
+    def merge_columns(self):
+        for merge_config in self.merge_columns_config:
+            new_column_name = merge_config.get("new_column_name")
+            operation = merge_config.get("operator")
+            columns_to_merge = merge_config.get("columns_to_merge")
+            pandas_merge(self.df, new_column_name, operation, columns_to_merge)
     @staticmethod
     def process_integer(value):
         if pd.isna(value) or (str(value).strip() == ""):
@@ -107,7 +120,10 @@ class Sanitizer:
         return str(value)
 
     def run(self):
+        self.clear_column_spaces()
+        self.merge_columns()
         self.rename_columns()
         self.convert_data_types()
         self.keep_columns()
         self.replace_values()
+

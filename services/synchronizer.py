@@ -19,23 +19,33 @@ class Synchronizer:
         "trade": TradeSerializer
     }
 
-    def __init__(self, file, file_type: Literal["cash_flow", "trade"] = None, columns_to_rename=None,
-                 values_to_replace=None,
-                 multiple_sheets=None):
+    def __init__(
+            self,
+            file,
+            file_type: Literal["cash_flow", "trade"] = None,
+            columns_to_rename=None,
+            values_to_replace=None,
+            multiple_sheets=None,
+            merge_columns=None):
 
         if multiple_sheets is None:
             multiple_sheets = {}
 
         if values_to_replace is None:
             values_to_replace = {}
+
         if columns_to_rename is None:
             columns_to_rename = {}
+
+        if merge_columns is None:
+            merge_columns = {}
 
         self.file = file
         self.file_type = file_type
         self.columns_to_rename = columns_to_rename
         self.values_to_replace = values_to_replace
         self.multiple_sheets = multiple_sheets
+        self.merge_columns = merge_columns
 
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
@@ -58,6 +68,7 @@ class Synchronizer:
                                                        {}) if sheet_name is not None else self.columns_to_rename
         sanitizer = Sanitizer(
             df,
+            merge_columns_config=self.merge_columns,
             data_type_mapping=self.get_data_type_mapping(),
             columns_to_keep=self.get_columns(),
             columns_to_rename=columns_to_rename,
