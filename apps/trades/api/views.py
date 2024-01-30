@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from apps.common.serializers import InputSerializer
+# TODO: Remove this unused import
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.models import Trade
 from services.synchronizer import Synchronizer
@@ -15,15 +16,15 @@ class TradeMappingView(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
+        # TODO: Handle creation of only new trades
         serializer = InputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        synchronizer = Synchronizer(serializer.validated_data['file'],
-
-                                    file_type="trade",
-
-                                    columns_to_rename=serializer.validated_data["column_mapping"],
-                                    )
+        synchronizer = Synchronizer(
+            serializer.validated_data['file'],
+            file_type="trade",
+            columns_to_rename=serializer.validated_data["column_mapping"],
+        )
         try:
             synchronizer.run()
         except Exception as e:
@@ -35,17 +36,18 @@ class TradesWithCashflowView(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
+        # TODO: Handle creation of only new trades
         serializer = InputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         Trade.objects.all().delete()
         CashFlow.objects.all().delete()
-        synchronizer = Synchronizer(serializer.validated_data['file'],
-
-                                    columns_to_rename=serializer.validated_data["column_mapping"],
-                                    multiple_sheets=serializer.validated_data["sheet_mapping"],
-                                    values_to_replace=serializer.validated_data["values_to_replace"]
-                                    )
+        synchronizer = Synchronizer(
+            serializer.validated_data['file'],
+            columns_to_rename=serializer.validated_data["column_mapping"],
+            multiple_sheets=serializer.validated_data["sheet_mapping"],
+            values_to_replace=serializer.validated_data["values_to_replace"]
+        )
         try:
             synchronizer.run()
         except Exception as e:

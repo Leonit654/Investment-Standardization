@@ -133,6 +133,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     }
     ```
 
+# TODO: Remove this =========================
 - **Key: cash_flow_type_mapping**
   - **Value:**
     ```json
@@ -143,7 +144,9 @@ This guide provides steps to synchronize trade and cashflow data using the provi
         "cash_order": "cash_order"
     }
     ```
+# ============================================
 
+# TODO: Add operator
 - **Key: values_to_replace**
   - **Value:**
     ```json
@@ -201,4 +204,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     "withdrawal":"withdrawal"
     }
     ```
-    
+
+# TODO: Add instructions to synchronize multi_sheet data (sme-finance)
+# Beautify function or method creation or call, if all parameters (or arguments) fit in one line, you leave it in on
+#    line. Otherwise, you put one parameter (argument) per line

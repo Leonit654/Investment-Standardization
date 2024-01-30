@@ -1,18 +1,24 @@
 1. Accept column mapping and cash flow type mapping inverted (reported_column: standard_column) and do the necessary
-    changes in the code to make it work. [Done]
+   changes in the code to make it work. [Done]
 2. Create cash orders [Done]
 3. Include trade, cash flow and cash order creation inside `Synchronizer` [Done]
 4. Add instructions to readme:
-   - setup project
-   - run project
-   - provide urls and payload for synchronizing `qkuk` and `skurs`
-5. Pass trade upload data through a serializer (You might use `CashFlowInputSerializer`.
-6. Add a `CashFlowSerializer` and `TradeSerializer` to validate sanitized data and create cash flows and trades in the 
-   database respectively 
+    - setup project
+    - run project
+    - provide urls and payload for synchronizing `qkuk` and `skurs` [Done]
+5. Pass trade upload data through a serializer (You might use `CashFlowInputSerializer`) [Done]
+6. Add a `CashFlowSerializer` and `TradeSerializer` to validate sanitized data and create cash flows and trades in the
+   database respectively [Done]
+7. Add a django command `load_initial_data` which loads cash flow types and add it to README [Done]
+8. Improve README by adding instructions to clone repo, create venv, install packages, load initial data,
+   runserver [Done]
 
-7. Create only new rows from the same file
-8. Read excel with separate sheets for trades and cash flows
-9. Synchronize sme_finance and growth-lending 
-10. Include trade formulas in new trade django model (`apps.trades.models`)
-11. Add a django command `load_initial_data` which loads cash flow types and add it to README
-12. Improve README by adding instructions to clone repo, create venv, install packages, load initial data, runserver
+9. Read excel with separate sheets for trades and cash flows
+10. Synchronize sme_finance and growth-lending
+11. Include trade formulas in new trade django model (`apps.trades.models`)
+12. Implement create only new trade or cash flow if it doesn't exist (without throwing error)
+13. Make it possible for trades to use `values_to_replace`
+14. Add the following features:
+    - add new column by merging different columns. For example there are `fee_amount` and `other_cost`
+      in the cash flows dataset, and their sum (`fee_amount` + `other_cost`) represents cash flow `amount`.
+    - Make this feature more general so user can take sum of two other columns, or multiply, or subtract
