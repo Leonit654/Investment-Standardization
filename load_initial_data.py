@@ -1,4 +1,5 @@
 import sqlite3
+# TODO: remove unused imports
 from datetime import datetime
 
 # Database connection parameters
