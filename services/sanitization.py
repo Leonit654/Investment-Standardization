@@ -1,8 +1,5 @@
-# sanitization.py
-
 import pandas as pd
-
-from services.utils import adjust_condition, get_pandas_mask
+from services.utils import adjust_condition, get_pandas_mask, pandas_merge
 
 
 class Sanitizer:
@@ -22,7 +19,8 @@ class Sanitizer:
             data_type_mapping=None,
             columns_to_keep=None,
             columns_to_rename=None,
-            values_to_replace=None
+            values_to_replace=None,
+            merge_columns_config=None
     ):
 
         if values_to_replace is None:
@@ -31,13 +29,25 @@ class Sanitizer:
             data_type_mapping = {}
         if columns_to_rename is None:
             columns_to_rename = {}
+        if merge_columns_config is None:
+            merge_columns_config = {}
 
         self.df = df
         self.data_type_mapping: dict = data_type_mapping
         self.columns_to_keep = columns_to_keep
         self.columns_to_rename = columns_to_rename
         self.values_to_replace = values_to_replace
+        self.merge_columns_config = merge_columns_config
 
+    def clear_column_spaces(self):
+        self.df.columns = [col.strip() for col in self.df.columns]
+
+    def merge_columns(self):
+        for merge_config in self.merge_columns_config:
+            new_column_name = merge_config.get("new_column_name")
+            operation = merge_config.get("operator")
+            columns_to_merge = merge_config.get("columns_to_merge")
+            pandas_merge(self.df, new_column_name, operation, columns_to_merge)
     @staticmethod
     def process_integer(value):
         if pd.isna(value) or (str(value).strip() == ""):
@@ -73,7 +83,6 @@ class Sanitizer:
             self.df.loc[mask, column_name] = new_value
 
     def to_dict(self):
-
         return self.df.to_dict(orient="records")
 
     @staticmethod
@@ -91,15 +100,12 @@ class Sanitizer:
     @staticmethod
     def process_percentage(value):
         try:
-            # Try converting the value to float
             float_value = float(value)
-            # Check if the float is within the range [0, 1]
             if 0 <= float_value <= 100:
                 return float_value
             else:
                 raise ValueError("Float value outside the valid percentage range [0, 1]")
         except (ValueError, TypeError):
-            # If the conversion fails, assume it's a percentage string and extract the float value
             return float(value.split('%')[0]) / 100
     @staticmethod
     def process_date(value):
@@ -107,17 +113,17 @@ class Sanitizer:
 
     @staticmethod
     def process_string(value):
-
         if pd.isna(value) or (str(value).strip() == ""):
             return None
-
         if isinstance(value, float) and int(value) == value:
             value = int(value)
-
         return str(value)
 
     def run(self):
+        self.clear_column_spaces()
+        self.merge_columns()
         self.rename_columns()
         self.convert_data_types()
         self.keep_columns()
         self.replace_values()
+
