@@ -89,7 +89,17 @@ class Sanitizer:
 
     @staticmethod
     def process_percentage(value):
-        return float(value.split('%')[0]) / 100
+        try:
+            # Try converting the value to float
+            float_value = float(value)
+            # Check if the float is within the range [0, 1]
+            if 0 <= float_value <= 100:
+                return float_value
+            else:
+                raise ValueError("Float value outside the valid percentage range [0, 1]")
+        except (ValueError, TypeError):
+            # If the conversion fails, assume it's a percentage string and extract the float value
+            return float(value.split('%')[0]) / 100
 
     @staticmethod
     def process_date(value):

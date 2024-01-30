@@ -12,7 +12,6 @@ INSERT INTO cash_flows_cashflowtype (value, created_at, updated_at) VALUES
   ('withdrawal', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('general_repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('principal_repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('interest_repayment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 """
 

@@ -14,5 +14,5 @@ def adjust_condition(condition: dict):
 
 def get_pandas_mask(df, conditions):
     conditions = [adjust_condition(condition) for condition in conditions]
-    mask = " & ".join(conditions)
+    mask = " | ".join(conditions)
     return pd.eval(mask)
