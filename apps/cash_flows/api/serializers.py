@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from apps.trades.models import Trade
 from apps.cash_flows.models import CashFlow, CashFlowType
+
+# TODO: remove this line if it is not needed
 from apps.trades.api.serializers import TradeSerializer
 
 
@@ -23,6 +25,7 @@ class CashFlowSerializer(serializers.ModelSerializer):
         fields = ["identifier", "trade_identifier", "amount", "date", "cash_flow_type"]
 
     def create(self, validated_data):
+        # TODO: handle errors regarding trade not found and object already exists
         trade_identifier = validated_data.pop('trade_identifier')
         trade_instance = Trade.objects.get(identifier=trade_identifier)
         cash_flow = CashFlow.objects.create(trade=trade_instance, **validated_data)
