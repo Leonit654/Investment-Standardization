@@ -1,11 +1,9 @@
 from typing import Literal
-
 from apps.cash_flows.api.serializers import CashFlowSerializer
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
 from services.file_reader import FileReader
-from services.object_creation import ObjectCreator
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 
@@ -47,7 +45,6 @@ class Synchronizer:
 
     def run(self):
         if not self.multiple_sheets:
-            # If no specific sheets are provided, process the entire file as a single sheet
             df = FileReader(self.file).read()
             self._process_sheet(df, self.file_type)
         else:

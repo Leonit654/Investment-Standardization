@@ -1,7 +1,4 @@
-# sanitization.py
-
 import pandas as pd
-
 from services.utils import adjust_condition, get_pandas_mask
 
 
@@ -73,7 +70,6 @@ class Sanitizer:
             self.df.loc[mask, column_name] = new_value
 
     def to_dict(self):
-
         return self.df.to_dict(orient="records")
 
     @staticmethod
@@ -91,15 +87,12 @@ class Sanitizer:
     @staticmethod
     def process_percentage(value):
         try:
-            # Try converting the value to float
             float_value = float(value)
-            # Check if the float is within the range [0, 1]
             if 0 <= float_value <= 100:
                 return float_value
             else:
                 raise ValueError("Float value outside the valid percentage range [0, 1]")
         except (ValueError, TypeError):
-            # If the conversion fails, assume it's a percentage string and extract the float value
             return float(value.split('%')[0]) / 100
     @staticmethod
     def process_date(value):
@@ -107,13 +100,10 @@ class Sanitizer:
 
     @staticmethod
     def process_string(value):
-
         if pd.isna(value) or (str(value).strip() == ""):
             return None
-
         if isinstance(value, float) and int(value) == value:
             value = int(value)
-
         return str(value)
 
     def run(self):
