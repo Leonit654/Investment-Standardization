@@ -67,11 +67,13 @@ class Sanitizer:
         for value_to_replace in self.values_to_replace:
             column_name = value_to_replace["column_name"]
             new_value = value_to_replace["value"]
+            operator = value_to_replace["operator"]
             condition = value_to_replace["condition"]
-            mask = get_pandas_mask(self.df, condition)
+            mask = get_pandas_mask(self.df, condition, operator)
             self.df.loc[mask, column_name] = new_value
 
     def to_dict(self):
+
         return self.df.to_dict(orient="records")
 
     @staticmethod
@@ -88,11 +90,20 @@ class Sanitizer:
 
     @staticmethod
     def process_percentage(value):
-        return float(value.split('%')[0]) / 100
-
+        try:
+            # Try converting the value to float
+            float_value = float(value)
+            # Check if the float is within the range [0, 1]
+            if 0 <= float_value <= 100:
+                return float_value
+            else:
+                raise ValueError("Float value outside the valid percentage range [0, 1]")
+        except (ValueError, TypeError):
+            # If the conversion fails, assume it's a percentage string and extract the float value
+            return float(value.split('%')[0]) / 100
     @staticmethod
     def process_date(value):
-        return pd.to_datetime(value, format='%d/%m/%Y')
+        return pd.to_datetime(value, format='%d/%m/%Y').date()
 
     @staticmethod
     def process_string(value):
