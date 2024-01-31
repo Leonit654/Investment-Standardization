@@ -23,7 +23,8 @@ class Synchronizer:
     def __init__(
             self, file, file_type: Literal["cash_flow", "trade"] = None, columns_to_rename=None,
             values_to_replace=None,
-            multiple_sheets=None):
+            multiple_sheets=None
+    ):
 
         if multiple_sheets is None:
             multiple_sheets = {}
@@ -65,7 +66,7 @@ class Synchronizer:
             data_type_mapping=self.get_data_type_mapping(),
             columns_to_keep=self.get_columns(),
             columns_to_rename=columns_to_rename,
-            values_to_replace=self.values_to_replace if self.file_type == "cash_flow" else None,
+            values_to_replace=self.values_to_replace
         )
         sanitizer.run()
         data = sanitizer.to_dict()

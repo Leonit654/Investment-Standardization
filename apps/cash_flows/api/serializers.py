@@ -5,6 +5,16 @@ from apps.cash_flows.models import CashFlow, CashFlowType
 
 # TODO: remove this line if it is not needed
 
+class CustomSlugRelatedField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        try:
+            # Try to get the Trade object from the database using the provided value
+            trade_obj = Trade.objects.get(identifier=data)
+            return trade_obj
+        except Trade.DoesNotExist:
+            # If the Trade object is not found, return None
+            return None
+
 
 class CashFlowTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,7 +23,7 @@ class CashFlowTypeSerializer(serializers.ModelSerializer):
 
 
 class CashFlowSerializer(serializers.ModelSerializer):
-    trade_identifier = serializers.SlugRelatedField(
+    trade_identifier = CustomSlugRelatedField(
         queryset=Trade.objects.all(), allow_null=True, required=False,
         slug_field='identifier')
     cash_flow_type = serializers.SlugRelatedField(
