@@ -1,4 +1,3 @@
-from rest_framework import serializers
 from apps.trades.models import Trade
 from rest_framework import serializers
 
