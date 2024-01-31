@@ -133,26 +133,16 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     }
     ```
 
-# TODO: Remove this =========================
-- **Key: cash_flow_type_mapping**
-  - **Value:**
-    ```json
-    {
-        "funding": "funding",
-        "principal_repayment": "principal_repayment",
-        "interest_repayment": "interest_repayment",
-        "cash_order": "cash_order"
-    }
-    ```
-# ============================================
 
-# TODO: Add operator
+
+
 - **Key: values_to_replace**
   - **Value:**
     ```json
     [
       {
           "column_name": "cash_flow_type",
+          "operator": "&",
           "value": "withdrawal",
           "condition": [
               {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
@@ -161,6 +151,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
       },
       {
           "column_name": "cash_flow_type",
+          "operator": "&",
           "value": "deposit",
           "condition": [
               {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
@@ -193,18 +184,94 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     }
     ```
 
-- **Key: cash_flow_type_mapping**
+- **Key: values_to_replace**
   - **Value:**
     ```json
-    {
-    "funding": "funding",
-    "principal_repayment": "principal_repayment",
-    "interest_repayment": "interest_repayment",
-    "deposit":"deposit",
-    "withdrawal":"withdrawal"
+    [
+        {
+        "column_name": "cash_flow_type",
+        "value": "general_repayment",
+        "operator":"|",
+        "condition": [
+            {"column_name": "cash_flow_type", "operator": "==", "value": "'repayment'"}
+                    ]
+         }
+    ]
+    ```
+
+## SME Finance Data:
+
+### Method: POST
+### URL: http://127.0.0.1:8000/trades/synchronize/all-in-one/
+
+#### Request Body (form-data):
+- **Key: file**
+  - **Value:** Your cashflow file
+
+- **Key: file_title**
+  - **Value:** Your file title
+
+- **Key: column_mapping**
+  - **Value:**
+    ```json
+      {
+    "trade": {
+      "asset_id": "identifier",
+      "issue_date": "issue_date",
+      "maturity_date": "maturity_date",
+      "purchased_amount": "invested_amount",
+      "interest_rate_exp": "interest_rate"
+     },
+    "cash_flow": {
+      "cash_flow_type": "cash_flow_type",
+      "cashflow_date": "date",
+      "realized_amount": "amount",
+      "asset_id": "trade_identifier",
+      "cashflow_id": "identifier"
+        }
     }
     ```
 
-# TODO: Add instructions to synchronize multi_sheet data (sme-finance)
-# Beautify function or method creation or call, if all parameters (or arguments) fit in one line, you leave it in on
-#    line. Otherwise, you put one parameter (argument) per line
+- **Key: values_to_replace**
+  - **Value:**
+    ```json
+    [
+          {
+              "column_name": "cash_flow_type",
+              "value": "principal_repayment",
+              "operator":"|",
+              "condition": [
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Principal Repayment'"},
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Principal repayment'"},
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Commission Repayment'"},
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'repayment_adjustment'"}
+              ]
+          },
+          {
+              "column_name": "cash_flow_type",
+              "value": "funding",
+              "operator":"|",
+              "condition": [
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Funding'"}
+              ]
+          },
+             {
+              "column_name": "cash_flow_type",
+              "value": "interest_repayment",
+              "operator":"|",
+              "condition": [
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Interest Repayment'"},
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Interest Repayment Adjustment'"},
+                  {"column_name": "cash_flow_type", "operator": "==", "value": "'other_cost'"}
+              ]
+          }
+      ]
+    ```
+- **Key: sheet_mapping**
+  - **Value:**
+    ```json
+      {
+    "asset": "trade",
+    "cashflow": "cash_flow"
+    }
+    ```

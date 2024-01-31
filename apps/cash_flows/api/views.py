@@ -1,8 +1,8 @@
-# TODO: remove unused imports throughout this file
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from apps.common.serializers import InputSerializer
 from services.synchronizer import Synchronizer
 
@@ -16,9 +16,7 @@ class CashFlowView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        values_to_replace = serializer.validated_data.get(
-            "values_to_replace", {}
-        )
+        values_to_replace = serializer.validated_data.get("values_to_replace", {})
 
         synchronizer = Synchronizer(
             serializer.validated_data["file"],
