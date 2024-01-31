@@ -18,8 +18,6 @@ def get_pandas_mask(df, conditions, operator):
     return pd.eval(mask)
 
 
-
-
 def pandas_merge(df, new_column_name, operation, columns_to_merge):
     operations = {
         "sum": lambda df, columns: df[columns].sum(axis=1),

@@ -205,6 +205,22 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     }
     ```
 
+- **Feature: Merge Columns**
+  - Description: This feature allows users to merge the values of two columns into a new column using specified operators.
+  - Operators: ['sum','subtract','multiply']
+  - Key: merge_columns
+  - Value: 
+    ```json
+       [
+         {
+            "new_column_name": "new_column_name",
+            "operator": "subtract",
+            "columns_to_merge": ["column1", "column2"]
+         }
+       ]
+    ```
+
+
 # TODO: Add instructions to synchronize multi_sheet data (sme-finance)
 # Beautify function or method creation or call, if all parameters (or arguments) fit in one line, you leave it in on
 #    line. Otherwise, you put one parameter (argument) per line
