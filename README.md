@@ -72,6 +72,17 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Key: file_title**
   - **Value:** Your file title
 
+- **Key: merge_columns
+  - **Value:**
+    ```json
+    [
+     {
+        "new_column_name": "purchase_amount",
+        "operator": "sum",
+        "columns_to_merge": ["total_invested_amount", "fee_amount"]
+     }
+    ]
+    ```
 - **Key: column_mapping**
   - **Value:** 
     ```json
@@ -276,20 +287,6 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     }
     ```
 
-- **Feature: Merge Columns**
-  - Description: This feature allows users to merge the values of two columns into a new column using specified operators.
-  - Operators: ['sum','subtract','multiply']
-  - Key: merge_columns
-  - Value: 
-    ```json
-       [
-         {
-            "new_column_name": "new_column_name",
-            "operator": "subtract",
-            "columns_to_merge": ["column1", "column2"]
-         }
-       ]
-    ```
     
 # **Trade Formulas:**
 
@@ -297,7 +294,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 
 ##   Realized Amount Endpoint
   
-    URL: http://localhost:8000/realized_amount/<identifier>/
+    URL: http://localhost:8000/trades/realized_amount/<identifier>/
     Method: POST
     Description: Retrieves the realized amount for a trade.
     Parameters:
@@ -310,7 +307,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
   
 ##   Gross Expected Amount Endpoint
   
-    URL: http://localhost:8000/gross_expected_amount/<identifier>/
+    URL: http://localhost:8000/trades/gross_expected_amount/<identifier>/
     Method: POST
     Description: Retrieves the gross expected amount for a trade.
     Parameters:
@@ -323,7 +320,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
   
 ##   Remaining Invested Amount Endpoint
   
-    URL: http://localhost:8000/remaining_invested_amount/<identifier>/
+    URL: http://localhost:8000/trades/remaining_invested_amount/<identifier>/
     Method: POST
     Description: Retrieves the remaining invested amount for a trade.
     Parameters:
@@ -336,7 +333,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
   
 ##   Closing Date Endpoint
   
-    URL: http://localhost:8000/closing_date/<identifier>/
+    URL: http://localhost:8000/trades/closing_date/<identifier>/
     Method: GET
     Description: Retrieves the closing date for a trade.
     Parameters:

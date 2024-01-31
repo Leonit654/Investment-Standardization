@@ -50,6 +50,7 @@ class Sanitizer:
             operation = merge_config.get("operator")
             columns_to_merge = merge_config.get("columns_to_merge")
             pandas_merge(self.df, new_column_name, operation, columns_to_merge)
+
     @staticmethod
     def process_integer(value):
         if pd.isna(value) or (str(value).strip() == ""):
@@ -89,7 +90,7 @@ class Sanitizer:
         return self.df.to_dict(orient="records")
 
     @staticmethod
-    def process_float(value, decimal_places=None):
+    def process_float(value, decimal_places=2):
         if pd.isna(value) or (str(value).strip() == ""):
             return None
         if isinstance(value, str):

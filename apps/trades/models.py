@@ -10,7 +10,7 @@ class Trade(TimeStamp):
     identifier = models.CharField(max_length=100, unique=True)
     issue_date = models.DateField(null=True, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
-    invested_amount = models.DecimalField(null=True, max_digits=10, decimal_places=2, blank=True)
+    invested_amount = models.DecimalField(null=True, max_digits=20, decimal_places=2, blank=True)
     interest_rate = models.FloatField()
 
     def get_realized_amount(self, reference_date):

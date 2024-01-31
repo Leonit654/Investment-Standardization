@@ -83,7 +83,7 @@ class Synchronizer:
         serializer_class = self.serializer_mapping.get(self.file_type)
         if serializer_class:
             serializer = serializer_class(data=data, many=True)
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 serializer.save()
             else:
                 print(f"Validation error for {sheet_file_type} - Sheet {sheet_name}:", serializer.errors)
