@@ -343,11 +343,3 @@ This guide provides steps to synchronize trade and cashflow data using the provi
       identifier: Identifier of the trade.
       
       GET /closing_date/123456/
-
-
-
-
-
-# TODO: Add instructions to synchronize multi_sheet data (sme-finance)
-# Beautify function or method creation or call, if all parameters (or arguments) fit in one line, you leave it in on
-#    line. Otherwise, you put one parameter (argument) per line
