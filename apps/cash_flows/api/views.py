@@ -16,12 +16,17 @@ class CashFlowView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        values_to_replace = serializer.validated_data.get("values_to_replace", {})
-
+        values_to_replace = serializer.validated_data.get(
+            "values_to_replace", {}
+        )
+        merge_columns = serializer.validated_data.get(
+            "merge_columns", {}
+        )
         synchronizer = Synchronizer(
             serializer.validated_data["file"],
             file_type="cash_flow",
             columns_to_rename=serializer.validated_data["column_mapping"],
+            merge_columns=merge_columns,
             values_to_replace=values_to_replace
         )
         synchronizer.run()

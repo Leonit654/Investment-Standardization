@@ -13,12 +13,21 @@
 8. Improve README by adding instructions to clone repo, create venv, install packages, load initial data,
    runserver [Done]
 
-9. Read excel with separate sheets for trades and cash flows
-10. Synchronize sme_finance and growth-lending
-11. Include trade formulas in new trade django model (`apps.trades.models`)
-12. Implement create only new trade or cash flow if it doesn't exist (without throwing error)
-13. Make it possible for trades to use `values_to_replace`
-14. Add the following features:
+9. Read excel with separate sheets for trades and cash flows [Done]
+10. Synchronize sme_finance and growth-lending [Done]
+11. Add the following features:
     - add new column by merging different columns. For example there are `fee_amount` and `other_cost`
       in the cash flows dataset, and their sum (`fee_amount` + `other_cost`) represents cash flow `amount`.
-    - Make this feature more general so user can take sum of two other columns, or multiply, or subtract
+    - Make this feature more general so user can take sum of two other columns, or multiply, or subtract [Done]
+
+12. Include trade formulas in new trade django model (`apps.trades.models`) [Done]
+13. Implement create only new trade or cash flow if it doesn't exist (without throwing error)
+14. Make it possible for trades to use `values_to_replace` and `merge_columns`
+15. Check integrity of data synchronization (Example qkuk cashflow with identifier = t_65837)
+16. Optimize synchronization runtime
+17. Insert data with no error, return error messages for rows with errors, possible with specific identifier
+18. Return overall error messages.
+
+
+
+
