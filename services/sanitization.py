@@ -1,5 +1,7 @@
+# sanitization.py
+
 import pandas as pd
-from services.utils import adjust_condition, get_pandas_mask, pandas_merge
+from services.utils import get_pandas_mask, pandas_merge
 
 
 class Sanitizer:
@@ -83,6 +85,7 @@ class Sanitizer:
             self.df.loc[mask, column_name] = new_value
 
     def to_dict(self):
+
         return self.df.to_dict(orient="records")
 
     @staticmethod
@@ -107,6 +110,7 @@ class Sanitizer:
                 raise ValueError("Float value outside the valid percentage range [0, 1]")
         except (ValueError, TypeError):
             return float(value.split('%')[0]) / 100
+
     @staticmethod
     def process_date(value):
         return pd.to_datetime(value, format='%d/%m/%Y').date()

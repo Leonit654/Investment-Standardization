@@ -25,7 +25,3 @@ class FileReader:
                 return pd.read_excel(self.buffer)
         else:
             raise ValueError(f"Unsupported file format: {filename_extension}")
-
-# Example usage:
-# file_reader = FileReader(buffer, sheet_names=["Sheet1", "Sheet2"])
-# data_frames_dict = file_reader.read()

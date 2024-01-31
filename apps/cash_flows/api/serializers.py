@@ -2,8 +2,6 @@ from rest_framework import serializers
 from apps.trades.models import Trade
 from apps.cash_flows.models import CashFlow, CashFlowType
 
-# TODO: remove this line if it is not needed
-
 
 class CashFlowTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,8 +10,10 @@ class CashFlowTypeSerializer(serializers.ModelSerializer):
 
 
 class CashFlowSerializer(serializers.ModelSerializer):
-    trade_identifier = serializers.SlugRelatedField(queryset=Trade.objects.all(), allow_null=True, required=False,
-                                                    slug_field='identifier')
+    trade_identifier = serializers.SlugRelatedField(
+        queryset=Trade.objects.all(), allow_null=True, required=False,
+        slug_field='identifier'
+    )
     cash_flow_type = serializers.SlugRelatedField(
         slug_field='value',
         queryset=CashFlowType.objects.all(),

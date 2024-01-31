@@ -1,8 +1,8 @@
-# TODO: remove unused imports throughout this file
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from apps.common.serializers import InputSerializer
 from services.synchronizer import Synchronizer
 

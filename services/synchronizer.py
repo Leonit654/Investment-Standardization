@@ -1,4 +1,5 @@
 from typing import Literal
+
 from apps.cash_flows.api.serializers import CashFlowSerializer
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
@@ -26,7 +27,8 @@ class Synchronizer:
             columns_to_rename=None,
             values_to_replace=None,
             multiple_sheets=None,
-            merge_columns=None):
+            merge_columns=None
+    ):
 
         if multiple_sheets is None:
             multiple_sheets = {}
@@ -64,8 +66,10 @@ class Synchronizer:
 
     def _process_sheet(self, df, sheet_file_type, sheet_name=None):
         self.file_type = sheet_file_type if sheet_name is not None else self.file_type
-        columns_to_rename = self.columns_to_rename.get(self.file_type,
-                                                       {}) if sheet_name is not None else self.columns_to_rename
+        columns_to_rename = self.columns_to_rename.get(
+            self.file_type,
+            {}
+        ) if sheet_name is not None else self.columns_to_rename
         sanitizer = Sanitizer(
             df,
             merge_columns_config=self.merge_columns,
