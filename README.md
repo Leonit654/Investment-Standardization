@@ -219,6 +219,62 @@ This guide provides steps to synchronize trade and cashflow data using the provi
          }
        ]
     ```
+    
+# **Trade Formulas:**
+
+    Trade identifier to test: 3366
+
+##   Realized Amount Endpoint
+  
+    URL: http://localhost:8000/realized_amount/<identifier>/
+    Method: POST
+    Description: Retrieves the realized amount for a trade.
+    Parameters:
+      identifier: Identifier of the trade.
+      reference_date: Date for reference. Default is '2023-12-04'.
+
+      POST /realized_amount/123456/
+      Body: {"reference_date": "2024-01-01"}
+  
+  
+##   Gross Expected Amount Endpoint
+  
+    URL: http://localhost:8000/gross_expected_amount/<identifier>/
+    Method: POST
+    Description: Retrieves the gross expected amount for a trade.
+    Parameters:
+      identifier: Identifier of the trade.
+      reference_date: Date for reference. Default is '2023-12-04'.
+      
+      POST /gross_expected_amount/123456/
+      Body: {"reference_date": "2024-01-01"}
+  
+  
+##   Remaining Invested Amount Endpoint
+  
+    URL: http://localhost:8000/remaining_invested_amount/<identifier>/
+    Method: POST
+    Description: Retrieves the remaining invested amount for a trade.
+    Parameters:
+      identifier: Identifier of the trade.
+      reference_date: Date for reference. Default is '2023-12-04'.
+      
+      POST /remaining_invested_amount/123456/
+      Body: {"reference_date": "2024-01-01"}
+  
+  
+##   Closing Date Endpoint
+  
+    URL: http://localhost:8000/closing_date/<identifier>/
+    Method: GET
+    Description: Retrieves the closing date for a trade.
+    Parameters:
+      identifier: Identifier of the trade.
+      
+      GET /closing_date/123456/
+
+
+
 
 
 # TODO: Add instructions to synchronize multi_sheet data (sme-finance)

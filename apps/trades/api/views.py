@@ -56,3 +56,39 @@ class TradesWithCashflowView(APIView):
         except Exception as e:
             raise e
         return Response("Trades and chash flows  uploaded successfully", status=200)
+
+
+class RealizedAmountView(APIView):
+    def post(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        reference_date = request.data.get('reference_date', '2023-12-04')
+        realized_amount = trade.get_realized_amount(reference_date)
+        return Response({"realized_amount": realized_amount}, status=status.HTTP_200_OK)
+
+
+class GrossExpectedAmountView(APIView):
+    def post(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        reference_date = request.data.get('reference_date', '2023-12-04')
+        gross_expected_amount = trade.get_gross_expected_amount(reference_date)
+        return Response({"gross_expected_amount": gross_expected_amount}, status=status.HTTP_200_OK)
+
+
+class RemainingInvestedAmountView(APIView):
+    def post(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        reference_date = request.data.get('reference_date', '2023-12-04')
+        remaining_invested_amount = trade.get_remaining_invested_amount(reference_date)
+        return Response({"remaining_invested_amount": remaining_invested_amount}, status=status.HTTP_200_OK)
+
+
+class ClosingDateView(APIView):
+    def get(self, request, identifier, *args, **kwargs):
+        try:
+            trade = Trade.objects.get(identifier=identifier)
+            closing_date = trade.get_closing_date()
+            return Response(closing_date, status=status.HTTP_200_OK)
+        except Trade.DoesNotExist:
+            return Response({"error": "Loan not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

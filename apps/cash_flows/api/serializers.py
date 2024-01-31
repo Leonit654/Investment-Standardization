@@ -25,7 +25,8 @@ class CashFlowSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # TODO: handle errors regarding trade not found and object already exists
-        trade_identifier = validated_data.pop('trade_identifier')
-        trade_instance = Trade.objects.get(identifier=trade_identifier)
-        cash_flow = CashFlow.objects.create(trade=trade_instance, **validated_data)
-        return cash_flow
+        validated_data["trade"] = validated_data.pop("trade_identifier")
+
+        instance = CashFlow(**validated_data)
+        instance.save()
+        return instance
