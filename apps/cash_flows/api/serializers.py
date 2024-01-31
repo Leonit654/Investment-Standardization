@@ -3,9 +3,6 @@ from apps.trades.models import Trade
 from apps.cash_flows.models import CashFlow, CashFlowType
 
 
-# TODO: remove this line if it is not needed
-
-
 class CashFlowTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CashFlowType

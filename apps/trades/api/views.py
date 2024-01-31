@@ -4,7 +4,6 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from apps.common.serializers import InputSerializer
-# TODO: Remove this unused import
 from apps.trades.models import Trade
 from services.synchronizer import Synchronizer
 from apps.cash_flows.models import CashFlow
