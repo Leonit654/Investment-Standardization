@@ -70,13 +70,19 @@ class Synchronizer:
             self.file_type,
             {}
         ) if sheet_name is not None else self.columns_to_rename
+        values_to_replace = self.values_to_replace.get(
+            self.file_type,
+            {}
+        ) if sheet_name is not None else self.columns_to_rename
+        if sheet_file_type == "cash_flow":
+            a=1
         sanitizer = Sanitizer(
             df,
             merge_columns_config=self.merge_columns,
             data_type_mapping=self.get_data_type_mapping(),
             columns_to_keep=self.get_columns(),
             columns_to_rename=columns_to_rename,
-            values_to_replace=self.values_to_replace if self.file_type == "cash_flow" else None,
+            values_to_replace=values_to_replace,
         )
         sanitizer.run()
         data = sanitizer.to_dict()
