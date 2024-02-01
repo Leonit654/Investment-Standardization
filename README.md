@@ -246,37 +246,40 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Key: values_to_replace**
   - **Value:**
     ```json
-    [
-          {
-              "column_name": "cash_flow_type",
-              "value": "principal_repayment",
-              "operator":"|",
-              "condition": [
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Principal Repayment'"},
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Principal repayment'"},
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Commission Repayment'"},
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'repayment_adjustment'"}
-              ]
-          },
-          {
-              "column_name": "cash_flow_type",
-              "value": "funding",
-              "operator":"|",
-              "condition": [
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Funding'"}
-              ]
-          },
-             {
-              "column_name": "cash_flow_type",
-              "value": "interest_repayment",
-              "operator":"|",
-              "condition": [
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Interest Repayment'"},
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'Interest Repayment Adjustment'"},
-                  {"column_name": "cash_flow_type", "operator": "==", "value": "'other_cost'"}
-              ]
-          }
-      ]
+    {
+    "trade": {},
+    "cash_flow": [
+        {
+            "column_name": "cash_flow_type",
+            "value": "principal_repayment",
+            "operator": "|",
+            "condition": [
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'Principal Repayment'"},
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'Principal repayment'"},
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'Commission Repayment'"},
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'repayment_adjustment'"}
+            ]
+        },
+        {
+            "column_name": "cash_flow_type",
+            "value": "funding",
+            "operator": "|",
+            "condition": [
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'Funding'"}
+            ]
+        },
+        {
+            "column_name": "cash_flow_type",
+            "value": "interest_repayment",
+            "operator": "|",
+            "condition": [
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'Interest Repayment'"},
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'Interest Repayment Adjustment'"},
+                {"column_name": "cash_flow_type", "operator": "==", "value": "'other_cost'"}
+            ]
+        }
+    ]
+    }
     ```
 - **Key: sheet_mapping**
   - **Value:**
