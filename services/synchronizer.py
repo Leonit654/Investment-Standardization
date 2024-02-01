@@ -73,12 +73,15 @@ class Synchronizer:
         values_to_replace = self.values_to_replace.get(
             self.file_type,
             {}
-        ) if sheet_name is not None else self.columns_to_rename
-        if sheet_file_type == "cash_flow":
-            a=1
+        ) if sheet_name is not None else self.values_to_replace
+        merge_columns = self.merge_columns.get(
+            self.file_type,
+            {}
+        ) if sheet_name is not None else self.merge_columns
+
         sanitizer = Sanitizer(
             df,
-            merge_columns_config=self.merge_columns,
+            merge_columns_config=merge_columns,
             data_type_mapping=self.get_data_type_mapping(),
             columns_to_keep=self.get_columns(),
             columns_to_rename=columns_to_rename,

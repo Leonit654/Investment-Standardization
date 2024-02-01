@@ -49,7 +49,8 @@ class TradesWithCashflowView(APIView):
             serializer.validated_data['file'],
             columns_to_rename=serializer.validated_data["column_mapping"],
             multiple_sheets=serializer.validated_data["sheet_mapping"],
-            values_to_replace=serializer.validated_data["values_to_replace"]
+            values_to_replace=serializer.validated_data["values_to_replace"],
+            merge_columns=serializer.validated_data["merge_columns"]
         )
         try:
             synchronizer.run()
