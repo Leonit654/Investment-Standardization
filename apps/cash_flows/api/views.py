@@ -3,6 +3,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.cash_flows.models import CashFlow
 from apps.common.serializers import InputSerializer
 from services.synchronizer import Synchronizer
 
@@ -15,13 +16,13 @@ class CashFlowView(APIView):
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         values_to_replace = serializer.validated_data.get(
             "values_to_replace", {}
         )
         merge_columns = serializer.validated_data.get(
             "merge_columns", {}
         )
+        # CashFlow.objects.all().delete()
         synchronizer = Synchronizer(
             serializer.validated_data["file"],
             file_type="cash_flow",

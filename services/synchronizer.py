@@ -5,19 +5,20 @@ from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
 from services.file_reader import FileReader
+from services.object_creation import ObjectCreator
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
-
-
+from apps.trades.models import Trade
+from apps.cash_flows.models import CashFlow
 class Synchronizer:
     model_mapping = {
         "cash_flow": CASH_FLOW_COLUMNS,
         "trade": TRADE_COLUMNS
     }
 
-    serializer_mapping = {
-        "cash_flow": CashFlowSerializer,
-        "trade": TradeSerializer
+    model_class_mapping = {
+        "cash_flow": CashFlow,
+        "trade": Trade
     }
 
     def __init__(
@@ -89,12 +90,10 @@ class Synchronizer:
         )
         sanitizer.run()
         data = sanitizer.to_dict()
-        serializer_class = self.serializer_mapping.get(self.file_type)
-        if serializer_class:
-            serializer = serializer_class(data=data, many=True)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-            else:
-                print(f"Validation error for {sheet_file_type} - Sheet {sheet_name}:", serializer.errors)
-        else:
-            print(f"No serializer found for {sheet_file_type} - Sheet {sheet_name}")
+        try:
+            ObjectCreator.create_objects(self.file_type, data)
+        except Exception as e:
+            print(f"An error occurred while creating objects: {e}")
+
+
+

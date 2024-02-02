@@ -43,8 +43,6 @@ class TradesWithCashflowView(APIView):
         serializer = InputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        Trade.objects.all().delete()
-        CashFlow.objects.all().delete()
         synchronizer = Synchronizer(
             serializer.validated_data['file'],
             columns_to_rename=serializer.validated_data["column_mapping"],
