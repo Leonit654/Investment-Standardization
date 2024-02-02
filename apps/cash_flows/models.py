@@ -8,7 +8,6 @@ class CashFlowType(TimeStamp):
     value = models.CharField(max_length=25)
 
     def __str__(self):
-        # TODO: I suggest we return self.value in here
         return self.value
 
 

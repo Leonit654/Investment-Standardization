@@ -64,6 +64,7 @@ class Synchronizer:
                 df = FileReader(self.file).read()
                 self._process_sheet(df, self.file_type)
             else:
+                # TODO: make sure we process trades first
                 for sheet_name, sheet_file_type in self.multiple_sheets.items():
                     df = FileReader(self.file, sheet_names=[sheet_name]).read()
                     self._process_sheet(df, sheet_file_type, sheet_name)

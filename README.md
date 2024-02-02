@@ -113,7 +113,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     "trade_id": "identifier",
     "trade_receivable_date": "issue_date",
     "due_date": "maturity_date",
-    " trade_receivable_amount ": "invested_amount",
+    "trade_receivable_amount": "invested_amount",
     "interest_rate_exp": "interest_rate"
     }
     ```

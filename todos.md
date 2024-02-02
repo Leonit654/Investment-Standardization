@@ -21,13 +21,11 @@
     - Make this feature more general so user can take sum of two other columns, or multiply, or subtract [Done]
 
 12. Include trade formulas in new trade django model (`apps.trades.models`) [Done]
-13. Implement create only new trade or cash flow if it doesn't exist (without throwing error)
-14. Make it possible for trades to use `values_to_replace` and `merge_columns`
-15. Check integrity of data synchronization (Example qkuk cashflow with identifier = t_65837)
-16. Optimize synchronization runtime
+13. Implement create only new trade or cash flow if it doesn't exist (without throwing error) [Done]
+14. Make it possible for trades to use `values_to_replace` and `merge_columns` [Done]
+15. Check integrity of data synchronization (Example qkuk cashflow with identifier = t_65837) [Done]
+16. Optimize synchronization runtime [Done]
 17. Insert data with no error, return error messages for rows with errors, possible with specific identifier
 18. Return overall error messages.
-
-
-
+19. Implement the view where user can upload trades and cash flows in separate files, and both of them are synchronized
 
