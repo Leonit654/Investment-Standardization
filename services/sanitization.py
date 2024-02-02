@@ -125,10 +125,17 @@ class Sanitizer:
         return str(value)
 
     def run(self):
-        self.clear_column_spaces()
-        self.merge_columns()
-        self.rename_columns()
-        self.convert_data_types()
-        self.keep_columns()
-        self.replace_values()
-
+        try:
+            print("Starting Sanitization")
+            print("Clearing column spaces")
+            self.clear_column_spaces()
+            self.merge_columns()
+            print("Renaming columns")
+            self.rename_columns()
+            print("Converting data types")
+            self.convert_data_types()
+            self.keep_columns()
+            self.replace_values()
+            print("Finished Sanitization")
+        except Exception as e:
+            raise Exception(f"Error while sanitizing data: {e}")

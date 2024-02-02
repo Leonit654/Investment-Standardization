@@ -27,7 +27,7 @@ class CashFlowView(APIView):
             file_type="cash_flow",
             columns_to_rename=serializer.validated_data["column_mapping"],
             merge_columns=merge_columns,
-            values_to_replace=values_to_replace
+            values_to_replace=values_to_replace,
         )
         synchronizer.run()
 

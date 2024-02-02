@@ -7,10 +7,8 @@ from apps.trades.models import Trade
 class CashFlowType(TimeStamp):
     value = models.CharField(max_length=25)
 
-
     def __str__(self):
-        # TODO: I suggest we return self.value in here
-        return self.id
+        return self.value
 
 
 class CashFlow(TimeStamp):
@@ -19,5 +17,3 @@ class CashFlow(TimeStamp):
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     date = models.DateField()
     cash_flow_type = models.ForeignKey("CashFlowType", related_name="cash_flows", on_delete=models.CASCADE)
-
-
