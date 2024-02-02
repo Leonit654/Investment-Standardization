@@ -28,8 +28,7 @@ class Synchronizer:
             columns_to_rename=None,
             values_to_replace=None,
             multiple_sheets=None,
-            merge_columns=None,
-            updated_file=False
+            merge_columns=None
     ):
 
         if multiple_sheets is None:
@@ -50,7 +49,6 @@ class Synchronizer:
         self.values_to_replace = values_to_replace
         self.multiple_sheets = multiple_sheets
         self.merge_columns = merge_columns
-        self.updated_file = updated_file
 
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
@@ -81,9 +79,15 @@ class Synchronizer:
             values_to_replace = self.values_to_replace.get(
                 self.file_type,
                 {}) if sheet_name is not None else self.values_to_replace
+
+            merge_columns = self.merge_columns.get(
+                self.file_type,
+                {}
+            ) if sheet_name is not None else self.merge_columns
+
             sanitizer = Sanitizer(
                 df,
-                merge_columns_config=self.merge_columns,
+                merge_columns_config=merge_columns,
                 data_type_mapping=self.get_data_type_mapping(),
                 columns_to_keep=self.get_columns(),
                 columns_to_rename=columns_to_rename,
