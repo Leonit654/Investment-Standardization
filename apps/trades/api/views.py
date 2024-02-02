@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from apps.common.serializers import InputSerializer
 from apps.trades.models import Trade
 from services.synchronizer import Synchronizer
-from apps.cash_flows.models import CashFlow
 
 
 class TradeMappingView(APIView):
@@ -26,7 +25,7 @@ class TradeMappingView(APIView):
             file_type="trade",
             columns_to_rename=serializer.validated_data["column_mapping"],
             merge_columns=merge_columns,
-            values_to_replace=values_to_replace
+            values_to_replace=values_to_replace,
         )
         try:
             synchronizer.run()
@@ -43,8 +42,6 @@ class TradesWithCashflowView(APIView):
         serializer = InputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        Trade.objects.all().delete()
-        CashFlow.objects.all().delete()
         synchronizer = Synchronizer(
             serializer.validated_data['file'],
             columns_to_rename=serializer.validated_data["column_mapping"],
