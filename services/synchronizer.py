@@ -28,8 +28,12 @@ class Synchronizer:
             columns_to_rename=None,
             values_to_replace=None,
             multiple_sheets=None,
-            merge_columns=None
+            merge_columns=None,
+            file_mapping=None
     ):
+
+        if file_mapping is None:
+            file_mapping = {}
 
         if multiple_sheets is None:
             multiple_sheets = {}
@@ -49,6 +53,7 @@ class Synchronizer:
         self.values_to_replace = values_to_replace
         self.multiple_sheets = multiple_sheets
         self.merge_columns = merge_columns
+        self.file_mapping = file_mapping
 
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
@@ -59,13 +64,20 @@ class Synchronizer:
     def run(self):
         try:
             if not self.multiple_sheets:
-                df = FileReader(self.file).read()
-                self._process_sheet(df, self.file_type)
+                for uploaded_file in self.file:
+                    df = FileReader(uploaded_file).read()
+                    file_name = uploaded_file.name
+                    file_type = self.file_mapping.get(file_name)
+                    if file_type:
+                        self._process_sheet(df, file_type, file_name)
+                    else:
+                        print(f"File type not specified for {file_name}. Skipping.")
             else:
                 # TODO: make sure we process trades first
                 for sheet_name, sheet_file_type in self.multiple_sheets.items():
-                    df = FileReader(self.file, sheet_names=[sheet_name]).read()
-                    self._process_sheet(df, sheet_file_type, sheet_name)
+                    for uploaded_file in self.file:
+                        df = FileReader(uploaded_file, sheet_names=[sheet_name]).read()
+                        self._process_sheet(df, sheet_file_type, sheet_name)
         except Exception as e:
             raise Exception(f"Error while reading the file: {e}")
 
