@@ -58,6 +58,15 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     ```
     and you should be able to use the project.
 
+
+  
+- **Start Celery:**
+  ```
+  celery -A Investment_Management worker -l INFO --pool=solo
+  ```
+  
+
+
 # Synchronize Trades 
 
 ## Qkuk Data:

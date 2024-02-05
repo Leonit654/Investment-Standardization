@@ -2,7 +2,6 @@ from apps.trades.models import Trade
 from apps.cash_flows.models import CashFlow, CashFlowType
 from typing import Dict, List
 
-
 class ObjectCreator:
     model_mapping = {
         "trade": Trade,
@@ -20,6 +19,7 @@ class ObjectCreator:
                 raise ValueError(f"Invalid object type: {self.object_type}")
 
             instances_to_create = []
+            errors = []
 
             for row in self.data:
                 current_row_data = row.copy()
@@ -28,19 +28,22 @@ class ObjectCreator:
                     trade_identifier = current_row_data.pop("trade_identifier")
                     cash_flow_type_value = current_row_data.pop("cash_flow_type")
 
-                    # Try to get the Trade instance or set it to None if not found
                     trade = Trade.objects.filter(identifier=trade_identifier).first()
                     current_row_data["trade"] = trade if trade else None
 
                     cash_flow_type = CashFlowType.objects.get(value=cash_flow_type_value)
                     current_row_data["cash_flow_type"] = cash_flow_type
 
-                # Check if an instance with the same data already exists in the database
-                if not model_class.objects.filter(**current_row_data).exists():
+                try:
                     instance = model_class(**current_row_data)
                     instances_to_create.append(instance)
+                except Exception as e:
+                    errors.append(f"Error creating object: {e}")
 
-            model_class.objects.bulk_create(instances_to_create)
-            return instances_to_create
+            if errors:
+                raise Exception(errors)
+            else:
+                model_class.objects.bulk_create(instances_to_create)
+                return instances_to_create
         except Exception as e:
             raise Exception(f"Error while creating objects: {e}")

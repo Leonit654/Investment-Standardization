@@ -8,7 +8,7 @@ from services.file_reader import FileReader
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 from services.object_creation import ObjectCreator
-
+import pandas as pd
 
 class Synchronizer:
     model_mapping = {
@@ -23,14 +23,13 @@ class Synchronizer:
 
     def __init__(
             self,
-            file,
+            file_identifier,
             file_type: Literal["cash_flow", "trade"] = None,
             columns_to_rename=None,
             values_to_replace=None,
             multiple_sheets=None,
             merge_columns=None
     ):
-
         if multiple_sheets is None:
             multiple_sheets = {}
 
@@ -43,7 +42,7 @@ class Synchronizer:
         if merge_columns is None:
             merge_columns = {}
 
-        self.file = file
+        self.file_identifier = file_identifier
         self.file_type = file_type
         self.columns_to_rename = columns_to_rename
         self.values_to_replace = values_to_replace
@@ -57,15 +56,16 @@ class Synchronizer:
         return self.model_mapping[self.file_type].keys()
 
     def run(self):
+        print(self)
         try:
             if not self.multiple_sheets:
-                df = FileReader(self.file).read()
+                df = FileReader(self.file_identifier).read()
                 self._process_sheet(df, self.file_type)
             else:
                 # TODO: make sure we process trades first
                 for sheet_name, sheet_file_type in self.multiple_sheets.items():
-                    df = FileReader(self.file, sheet_names=[sheet_name]).read()
-                    self._process_sheet(df, sheet_file_type, sheet_name)
+                    # df = FileReader(self.file, sheet_names=[sheet_name]).read()
+                    self._process_sheet(self.file_identifier, sheet_file_type, sheet_name)
         except Exception as e:
             raise Exception(f"Error while reading the file: {e}")
 
@@ -98,4 +98,4 @@ class Synchronizer:
             data_to_save = ObjectCreator(self.file_type, data)
             data_to_save.create_new_objects()
         except Exception as e:
-            raise Exception(f"Error while processing data {e}")
+            raise Exception(f"Error while processing data: {e}")

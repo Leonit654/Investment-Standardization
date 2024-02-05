@@ -17,8 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from apps.common.views import Trade_Cashflow
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("trades/", include("apps.trades.api.urls")),
     path("cash_flows/", include("apps.cash_flows.api.urls")),
+    path("synchronize", Trade_Cashflow.as_view()),
+
 ]
