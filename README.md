@@ -219,6 +219,94 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     ]
     ```
 
+## Synchronize Both Files:
+
+### Method: POST
+### URL: http://127.0.0.1:8000/synchronize/
+
+#### Request Body (form-data):
+- **Key: trades_file**
+  - **Value:** Your trade file
+
+- **Key: cashflows_file**
+  - **Value:** Your cashflow title
+
+- **Key: file_title**
+  - **Value:** Your files title
+
+- **Key: column_mapping**
+  - **Value:**
+    ```json
+    {
+      "trade": {
+       "loan_id": "identifier",
+       "issue_date":"issue_date",
+       "maturity_date":"maturity_date",
+       "purchase_amount":"invested_amount",
+       "interest_rate_exp":"interest_rate"
+    },
+      "cash_flow": {
+        "cashflow_type": "cash_flow_type",
+        "cashflow_date": "date",
+        "amount": "amount",
+        "loan_identifier": "trade_identifier",
+        "identifier": "identifier"
+    }
+    }
+    ```
+
+    - **Key: values_to_replace**
+      - **Value:**
+        ```json
+            {
+            "trade": [
+     
+            ],
+            "cash_flow":  [
+              {
+                  "column_name": "cash_flow_type",
+                  "operator": "&",
+                  "value": "withdrawal",
+                  "condition": [
+                      {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
+                      {"column_name": "amount", "operator": "<", "value": 0}
+                  ]
+              },
+              {
+                  "column_name": "cash_flow_type",
+                  "operator": "&",
+                  "value": "deposit",
+                  "condition": [
+                      {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
+                      {"column_name": "amount", "operator": ">", "value": 0}
+                  ]
+              }
+            ]
+        }
+        ```
+- **Key: merge_columns**
+  - **Value:**
+    ```json 
+         { "trade":[
+            
+              {
+                  "new_column_name": "new_realized",
+                  "operator": "sum",
+                  "columns_to_merge": ["purchased_amount", "interest_rate_exp"]
+              }
+          
+               ],
+          "cash_flow":[
+             {
+                "new_column_name": "merged_columns",
+                "operator": "subtract",
+                "columns_to_merge": ["realized_amount", "realized_amount"]
+               }
+          ]
+          
+     }
+  ```
+
 ## SME Finance Data:
 
 ### Method: POST

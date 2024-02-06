@@ -32,7 +32,8 @@ class CashFlowView(APIView):
 
         file = serializer.validated_data.get("file")
         file_identifier = str(uuid.uuid4()) + serializer.validated_data.get("file").name
-
+            # Trade.objects.all().delete()
+            # CashFlow.objects.all().delete()
 
         File.objects.create(file_identifier=file_identifier, file=file)
         try:
