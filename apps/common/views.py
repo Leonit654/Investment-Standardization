@@ -7,12 +7,11 @@ from rest_framework.views import APIView
 from .serializers import BothInputSerializer
 from .models import File
 import uuid
-
 from ..cash_flows.models import CashFlow
 from ..trades.models import Trade
 
 
-class Trade_Cashflow(APIView):
+class Synchronizer(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):

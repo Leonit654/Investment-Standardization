@@ -1,5 +1,4 @@
 from typing import Literal
-
 from apps.cash_flows.api.serializers import CashFlowSerializer
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
@@ -8,7 +7,6 @@ from services.file_reader import FileReader, logger
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 from services.object_creation import ObjectCreator
-import pandas as pd
 
 class Synchronizer:
     model_mapping = {
@@ -56,9 +54,7 @@ class Synchronizer:
         return self.model_mapping[self.file_type].keys()
 
     def run(self):
-        print(self)
         try:
-            logger.info(f" Multiple sheetsssssssssssssssssssssssssssssssssssssssssss-   {self.multiple_sheets}")
             if not self.multiple_sheets:
                 df = FileReader(self.file_identifier).read()
                 self._process_sheet(df, self.file_type)
