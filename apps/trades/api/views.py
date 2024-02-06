@@ -11,27 +11,27 @@ from services.synchronizer import Synchronizer
 class TradeMappingView(APIView):
     parser_classes = (MultiPartParser,)
 
-    def post(self, request, format=None):
-        # TODO: Handle creation of only new trades
-        serializer = InputSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        merge_columns = serializer.validated_data.get(
-            "merge_columns", {}
-        )
-        values_to_replace = serializer.validated_data.get("values_to_replace")
-        synchronizer = Synchronizer(
-            serializer.validated_data['file'],
-            file_type="trade",
-            columns_to_rename=serializer.validated_data["column_mapping"],
-            merge_columns=merge_columns,
-            values_to_replace=values_to_replace,
-        )
-        try:
-            synchronizer.run()
-        except Exception as e:
-            raise e
-        return Response("Trades uploaded successfully", status=200)
+    # def post(self, request, format=None):
+    #     # TODO: Handle creation of only new trades
+    #     serializer = InputSerializer(data=request.data)
+    #     if not serializer.is_valid():
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     merge_columns = serializer.validated_data.get(
+    #         "merge_columns", {}
+    #     )
+    #     values_to_replace = serializer.validated_data.get("values_to_replace")
+    #     synchronizer = Synchronizer(
+    #         serializer.validated_data['file'],
+    #         file_type="trade",
+    #         columns_to_rename=serializer.validated_data["column_mapping"],
+    #         merge_columns=merge_columns,
+    #         values_to_replace=values_to_replace,
+    #     )
+    #     try:
+    #         synchronizer.run()
+    #     except Exception as e:
+    #         raise e
+    #     return Response("Trades uploaded successfully", status=200)
 
 
 class TradesWithCashflowView(APIView):
@@ -45,9 +45,14 @@ class TradesWithCashflowView(APIView):
         synchronizer = Synchronizer(
             serializer.validated_data['file'],
             columns_to_rename=serializer.validated_data["column_mapping"],
-            multiple_sheets=serializer.validated_data["sheet_mapping"],
-            values_to_replace=serializer.validated_data["values_to_replace"],
-            merge_columns=serializer.validated_data["merge_columns"]
+            multiple_sheets=serializer.validated_data[
+                "sheet_mapping"] if "sheet_mapping" in serializer.validated_data else None,
+            values_to_replace=serializer.validated_data[
+                "values_to_replace"] if "values_to_replace" in serializer.validated_data else None,
+            merge_columns=serializer.validated_data[
+                "merge_columns"] if "merge_columns" in serializer.validated_data else None,
+            file_mapping=serializer.validated_data[
+                "file_mapping"] if "file_mapping" in serializer.validated_data else None
         )
         try:
             synchronizer.run()
