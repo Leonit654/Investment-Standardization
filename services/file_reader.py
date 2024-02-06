@@ -28,22 +28,21 @@ class FileReader:
         file_dir = os.path.join(base_dir, management_dir, uploads_dir)
 
         new_file_path = os.path.join(file_dir, file_name)
-
         if not os.path.exists(new_file_path):
             raise FileNotFoundError(f"File '{new_file_path}' does not exist.")
-
         try:
             filename_extension = os.path.splitext(new_file_path)[-1]
             if filename_extension.lower() == ".csv":
                 return pd.read_csv(new_file_path)
             elif filename_extension.lower() in [".xls", ".xlsx"]:
                 if self.sheet_names:
-                    data_frames = {}
+                    data_frame = {}
                     for sheet_name in self.sheet_names:
-                        data_frames[sheet_name] = pd.read_excel(new_file_path, sheet_name=sheet_name)
-                    return data_frames
+                        data_frame = pd.read_excel(new_file_path, sheet_name=sheet_name)
+                    return data_frame
                 else:
                     return pd.read_excel(new_file_path)
+
             else:
                 raise ValueError(f"Unsupported file format: {filename_extension}")
         except Exception as e:

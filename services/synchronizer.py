@@ -4,7 +4,7 @@ from apps.cash_flows.api.serializers import CashFlowSerializer
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
-from services.file_reader import FileReader
+from services.file_reader import FileReader, logger
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 from services.object_creation import ObjectCreator
@@ -64,8 +64,8 @@ class Synchronizer:
             else:
                 # TODO: make sure we process trades first
                 for sheet_name, sheet_file_type in self.multiple_sheets.items():
-                    # df = FileReader(self.file, sheet_names=[sheet_name]).read()
-                    self._process_sheet(self.file_identifier, sheet_file_type, sheet_name)
+                    df = FileReader(self.file_identifier, sheet_names=[sheet_name]).read()
+                    self._process_sheet(df, sheet_file_type, sheet_name)
         except Exception as e:
             raise Exception(f"Error while reading the file: {e}")
 

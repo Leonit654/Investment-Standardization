@@ -1,6 +1,8 @@
 # sanitization.py
 
 import pandas as pd
+
+from services.file_reader import logger
 from services.utils import get_pandas_mask, pandas_merge
 
 
@@ -71,6 +73,7 @@ class Sanitizer:
             method_name = self.type_conversion_method_mapping[data_type]
             for column in columns:
                 self.df[column] = self.df[column].apply(getattr(self, method_name))
+                logger.info(f" Convertiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiing{data_type} - {columns}")
 
     def keep_columns(self):
         if self.columns_to_keep:
@@ -103,7 +106,14 @@ class Sanitizer:
 
     @staticmethod
     def process_percentage(value):
-        return float(value.split('%')[0]) / 100
+        try:
+            float_value = float(value)
+            if 0 <= float_value <= 100:
+                return float_value
+            else:
+                raise ValueError("Float value outside the valid percentage range [0, 1]")
+        except (ValueError, TypeError):
+            return float(value.split('%')[0]) / 100
 
     @staticmethod
     def process_date(value):
