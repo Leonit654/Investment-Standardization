@@ -11,7 +11,7 @@ class CashFlowTypeSerializer(serializers.ModelSerializer):
 
 class CashFlowSerializer(serializers.ModelSerializer):
     trade_identifier = serializers.SlugRelatedField(
-        queryset=Trade.objects.all(), allow_null=True, required=False,
+        read_only=True,
         slug_field='identifier'
     )
     cash_flow_type = serializers.SlugRelatedField(
@@ -23,10 +23,12 @@ class CashFlowSerializer(serializers.ModelSerializer):
         model = CashFlow
         fields = ["identifier", "trade_identifier", "amount", "date", "cash_flow_type"]
 
-    def create(self, validated_data):
-        # TODO: handle errors regarding trade not found and object already exists
-        validated_data["trade"] = validated_data.pop("trade_identifier")
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
 
-        instance = CashFlow(**validated_data)
-        instance.save()
-        return instance
+        if instance.trade is not None:
+            representation['trade_identifier'] = instance.trade.identifier
+        else:
+            representation['trade_identifier'] = None
+
+        return representation

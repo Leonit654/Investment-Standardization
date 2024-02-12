@@ -2,36 +2,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-
+from apps.trades.api.serializers import TradeSerializer
 from apps.common.serializers import InputSerializer
 from apps.trades.models import Trade
 from services.synchronizer import Synchronizer
-
-
-class TradeMappingView(APIView):
-    parser_classes = (MultiPartParser,)
-
-    # def post(self, request, format=None):
-    #     # TODO: Handle creation of only new trades
-    #     serializer = InputSerializer(data=request.data)
-    #     if not serializer.is_valid():
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     merge_columns = serializer.validated_data.get(
-    #         "merge_columns", {}
-    #     )
-    #     values_to_replace = serializer.validated_data.get("values_to_replace")
-    #     synchronizer = Synchronizer(
-    #         serializer.validated_data['file'],
-    #         file_type="trade",
-    #         columns_to_rename=serializer.validated_data["column_mapping"],
-    #         merge_columns=merge_columns,
-    #         values_to_replace=values_to_replace,
-    #     )
-    #     try:
-    #         synchronizer.run()
-    #     except Exception as e:
-    #         raise e
-    #     return Response("Trades uploaded successfully", status=200)
 
 
 class TradesWithCashflowView(APIView):
@@ -95,3 +69,24 @@ class ClosingDateView(APIView):
             return Response({"error": "Loan not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TradesDetailView(APIView):
+    def get(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        serializer = TradeSerializer(trade)
+
+        return Response(serializer.data)
+
+    def put(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        serializer = TradeSerializer(trade, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, identifier, *args, **kwargs):
+        trade = Trade.objects.get(identifier=identifier)
+        trade.delete()
+        return Response(f"Trade with identifier: {identifier} has been deleted", status=status.HTTP_204_NO_CONTENT)

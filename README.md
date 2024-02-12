@@ -337,6 +337,41 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     "cashflow": "cash_flow"
     }
     ```
+    
+# Trade Details:
+  **Method: GET, PUT, DELETE**
+
+  **URL: http://127.0.0.1:8000/trades/trade-details/<str:identifier>/**
+
+# Cash Flows Details:
+  **Method: GET, PUT, DELETE**
+
+  **URL: http://127.0.0.1:8000/cash_flows/cash_flow_detail/<str:identifier>/**
+
+### Get all Cash Flows:
+  **Method: GET**
+
+  **URL:http://127.0.0.1:8000/cash_flows/list_cash_flows/**
+
+# Cash Flow Types Details:
+  **Method: GET, PUT, DELETE**
+
+  **URL: http://127.0.0.1:8000/cash_flows/cash_flow_type_detail/<str:value>/**
+
+
+### Get all Cash Flow Types:
+  **Method: GET**
+
+  **URL:http://127.0.0.1:8000/cash_flows/list_cash_flow_type/**
+
+### Add a Cash Flow Type: 
+
+**Method: POST**
+
+**URL : http://127.0.0.1:8000/cash_flows/list_cash_flow_type/**
+#### Request Body (form-data):
+- **Key: value**
+  - **Value:** Your cashflow type file
 
     
 # **Trade Formulas:**
