@@ -158,7 +158,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Value:**
   ```json
   {
-      "trade": {},
+      "trade": [],
       "cash_flow": {
           "cashflow_type": "cash_flow_type",
           "cashflow_date": "date",
@@ -172,7 +172,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
   - **Value:**
     ```json
     {
-      "trade": {},
+      "trade": [],
       "cash_flow": [
           {
               "column_name": "cash_flow_type",
