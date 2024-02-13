@@ -212,7 +212,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
           },
           {
               "column_name": "cash_flow_type",
-              "operator": "&",
+              "operator": "&",  
               "value": "deposit",
               "condition": [
                   {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},

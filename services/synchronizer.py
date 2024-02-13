@@ -50,6 +50,7 @@ class Synchronizer:
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
 
+
     def get_columns(self):
         return self.model_mapping[self.file_type].keys()
 
@@ -57,6 +58,7 @@ class Synchronizer:
         try:
             if not self.multiple_sheets:
                 df = FileReader(self.file_identifier).read()
+                print(df)
                 self._process_sheet(df, self.file_type)
 
             else:
@@ -83,7 +85,7 @@ class Synchronizer:
                 self.file_type,
                 {}
             ) if sheet_name is not None else self.merge_columns
-
+            print(f"eltooooooooooncolumns to rename {self.columns_to_rename}")
             sanitizer = Sanitizer(
                 df,
                 merge_columns_config=merge_columns,

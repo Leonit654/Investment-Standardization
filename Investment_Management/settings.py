@@ -15,7 +15,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_RESULT_BACKEND = 'rpc'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_PERSISTENT = True
 
 # Quick-start development settings - unsuitable for production
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     'corsheaders',
-
+    'django_celery_results',
     "apps.trades",
     "apps.cash_flows",
     "apps.common",
