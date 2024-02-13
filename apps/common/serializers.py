@@ -9,3 +9,13 @@ class InputSerializer(serializers.Serializer):
     sheet_mapping = serializers.JSONField(required=False)
     merge_columns = serializers.JSONField(required=False)
     file_mapping = serializers.JSONField(required=False)
+
+
+class BothInputSerializer(serializers.Serializer):
+    trades_file = serializers.FileField(required=False)
+    cashflows_file = serializers.FileField(required=False)
+    file_title = serializers.CharField(max_length=255, required=False)
+    column_mapping = serializers.JSONField()
+    values_to_replace = serializers.JSONField(required=False)
+    sheet_mapping = serializers.JSONField(required=False)
+    merge_columns = serializers.JSONField(required=False)
