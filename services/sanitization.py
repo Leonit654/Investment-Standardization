@@ -64,16 +64,13 @@ class Sanitizer:
         return str(value).lower() in ['true', 'yes', '1']
 
     def rename_columns(self):
-        columns_to_rename_no_spaces = {key.strip(): value for key, value in self.columns_to_rename.items()}
-        self.df = self.df.rename(columns=columns_to_rename_no_spaces)
+        self.df = self.df.rename(columns=self.columns_to_rename)
 
     def convert_data_types(self):
         for data_type, columns in self.data_type_mapping.items():
             method_name = self.type_conversion_method_mapping[data_type]
             for column in columns:
                 self.df[column] = self.df[column].apply(getattr(self, method_name))
-            print(f"Coluuumnnnnnnnns{self.df.columns}")
-            print(f"{columns}")
 
     def keep_columns(self):
         if self.columns_to_keep:
@@ -128,11 +125,10 @@ class Sanitizer:
         return str(value)
 
     def run(self):
-        try:
+
             print("Starting Sanitization")
             print("Clearing column spaces")
             self.clear_column_spaces()
-            print(f"Clearingggggg Columnsssss{self.df.columns} ")
             self.merge_columns()
             print("Renaming columns")
             self.rename_columns()
@@ -141,5 +137,3 @@ class Sanitizer:
             self.keep_columns()
             self.replace_values()
             print("Finished Sanitization")
-        except Exception as e:
-            raise Exception(f"Error while sanitizing data: {e}")

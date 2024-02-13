@@ -56,8 +56,8 @@ class Synchronizer(APIView):
                 cashflows_file_identifier = str(uuid.uuid4()) + cashflows_file.name
                 File.objects.create(file_identifier=cashflows_file_identifier, file=cashflows_file)
 
-                task = synchronizer.apply_async(
-                    kwargs={
+                task = synchronizer(
+                    **{
                         'file_type': "cash_flow",
                         'file_identifier': cashflows_file_identifier,
                         'columns_to_rename': column_mapping.get('cash_flow'),
@@ -66,7 +66,7 @@ class Synchronizer(APIView):
                     }
                 )
 
-                task_ids.append(task.id)
+                # task_ids.append(task.id)
 
             return Response({"task_ids": task_ids, "message": "Synchronization started successfully."},
                             status=status.HTTP_202_ACCEPTED)

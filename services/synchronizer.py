@@ -1,5 +1,6 @@
 from typing import Literal
 from apps.cash_flows.api.serializers import CashFlowSerializer
+from apps.common.models import File
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
@@ -26,8 +27,13 @@ class Synchronizer:
             columns_to_rename=None,
             values_to_replace=None,
             multiple_sheets=None,
-            merge_columns=None
+            merge_columns=None,
+            file_name=None,
+            file_mapping=None,
     ):
+        if file_mapping is None:
+            file_mapping = {}
+
         if multiple_sheets is None:
             multiple_sheets = {}
 
@@ -46,6 +52,8 @@ class Synchronizer:
         self.values_to_replace = values_to_replace
         self.multiple_sheets = multiple_sheets
         self.merge_columns = merge_columns
+        self.file_mapping = file_mapping
+        self.file_name = file_name
 
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
@@ -55,10 +63,10 @@ class Synchronizer:
         return self.model_mapping[self.file_type].keys()
 
     def run(self):
-        try:
+
             if not self.multiple_sheets:
                 df = FileReader(self.file_identifier).read()
-                print(df)
+                self.file_type = self.file_mapping.get(self.file_name)
                 self._process_sheet(df, self.file_type)
 
             else:
@@ -67,11 +75,10 @@ class Synchronizer:
                     df = FileReader(self.file_identifier, sheet_names=[sheet_name]).read()
 
                     self._process_sheet(df, sheet_file_type, sheet_name)
-        except Exception as e:
-            raise Exception(f"Error while reading the file: {e}")
+
 
     def _process_sheet(self, df, sheet_file_type, sheet_name=None):
-        try:
+
             self.file_type = sheet_file_type if sheet_name is not None else self.file_type
             columns_to_rename = self.columns_to_rename.get(
                 self.file_type,
@@ -98,5 +105,3 @@ class Synchronizer:
             data = sanitizer.to_dict()
             data_to_save = ObjectCreator(self.file_type, data)
             data_to_save.create_new_objects()
-        except Exception as e:
-            raise Exception(f"Error while processing data: {e}")
