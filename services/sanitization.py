@@ -64,7 +64,9 @@ class Sanitizer:
         return str(value).lower() in ['true', 'yes', '1']
 
     def rename_columns(self):
+        print("Before renaming:", self.df.columns)
         self.df = self.df.rename(columns=self.columns_to_rename)
+        print("After renaming:", self.df.columns)
 
     def convert_data_types(self):
         for data_type, columns in self.data_type_mapping.items():
@@ -125,7 +127,7 @@ class Sanitizer:
         return str(value)
 
     def run(self):
-        try:
+
             print("Starting Sanitization")
             print("Clearing column spaces")
             self.clear_column_spaces()
@@ -137,5 +139,4 @@ class Sanitizer:
             self.keep_columns()
             self.replace_values()
             print("Finished Sanitization")
-        except Exception as e:
-            raise Exception(f"Error while sanitizing data: {e}")
+

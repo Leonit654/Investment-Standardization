@@ -1,38 +1,51 @@
+import uuid
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+
+from apps.common.models import File
 from apps.trades.api.serializers import TradeSerializer
 from apps.common.serializers import InputSerializer
 from apps.trades.models import Trade
 from services.synchronizer import Synchronizer
+from services.tasks import synchronizer
 
 
 class TradesWithCashflowView(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
-        # TODO: Handle creation of only new trades
         serializer = InputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        synchronizer = Synchronizer(
-            serializer.validated_data['file'],
-            columns_to_rename=serializer.validated_data["column_mapping"],
-            multiple_sheets=serializer.validated_data[
-                "sheet_mapping"] if "sheet_mapping" in serializer.validated_data else None,
-            values_to_replace=serializer.validated_data[
-                "values_to_replace"] if "values_to_replace" in serializer.validated_data else None,
-            merge_columns=serializer.validated_data[
-                "merge_columns"] if "merge_columns" in serializer.validated_data else None,
-            file_mapping=serializer.validated_data[
-                "file_mapping"] if "file_mapping" in serializer.validated_data else None
-        )
-        try:
-            synchronizer.run()
-        except Exception as e:
-            raise e
-        return Response("Trades and chash flows  uploaded successfully", status=200)
+        file = serializer.validated_data.get('file')
+        column_mapping = serializer.validated_data.get('column_mapping', {})
+        values_to_replace = serializer.validated_data.get('values_to_replace', {})
+        merge_columns = serializer.validated_data.get('merge_columns', {})
+        sheet_mapping = serializer.validated_data.get('sheet_mapping', {})
+        file_mapping = serializer.validated_data.get('file_mapping', {})
+        task_ids = []
+        for file in file:
+            file_identifier = str(uuid.uuid4()) + file.name
+            File.objects.create(file_identifier=file_identifier,
+                                file=file)
+
+            task = synchronizer.apply_async(
+                kwargs={
+                    'file_identifier': file_identifier,
+                    'columns_to_rename': column_mapping,
+                    'merge_columns': merge_columns,
+                    'values_to_replace': values_to_replace,
+                    'sheet_mapping': sheet_mapping,
+                    'file_mapping': file_mapping,
+                    'file_name': file.name
+                }
+            )
+            task_ids.append(task.id)
+        return Response({"task_ids": task_ids, "message": "Synchronization started successfully."},
+                        status=status.HTTP_202_ACCEPTED)
 
 
 class RealizedAmountView(APIView):
