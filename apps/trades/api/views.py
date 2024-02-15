@@ -1,62 +1,42 @@
-
 from rest_framework import status
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from apps.common.serializers import  InputSerializer
 from apps.trades.models import Trade
-from services.synchronizer import Synchronizer
+from .serializers import TradeSerializer
 
 
-class TradeMappingView(APIView):
-    parser_classes = (MultiPartParser,)
+class TradeListView(APIView):
+    pagination_class = PageNumberPagination
 
-    def post(self, request, format=None):
-        serializer = InputSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        merge_columns = serializer.validated_data.get(
-            "merge_columns", {}
-        )
-        values_to_replace = serializer.validated_data.get("values_to_replace")
-        synchronizer = Synchronizer(
-            serializer.validated_data['file'],
-            file_type="trade",
-            columns_to_rename=serializer.validated_data["column_mapping"],
-            merge_columns=merge_columns,
-            values_to_replace=values_to_replace,
-        )
-        try:
-            synchronizer.run()
-        except Exception as e:
-            raise e
-        return Response("Trades uploaded successfully", status=200)
+    def get(self, request):
+        organization_id = request.query_params.get('organizationId')
+        if organization_id:
+            trades = Trade.objects.filter(organization_id=organization_id)
+        else:
+            trades = Trade.objects.all()
 
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(trades, request)
+        serializer = TradeSerializer(result_page, many=True)
 
-class TradesWithCashflowView(APIView):
-    parser_classes = (MultiPartParser,)
+        response_data = {
+            'results': serializer.data,
+            'total_pages': paginator.page.paginator.num_pages,
+        }
 
-    def post(self, request, format=None):
-        serializer = InputSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        synchronizer = Synchronizer(
-            serializer.validated_data['file'],
-            columns_to_rename=serializer.validated_data["column_mapping"],
-            multiple_sheets=serializer.validated_data[
-                "sheet_mapping"] if "sheet_mapping" in serializer.validated_data else None,
-            values_to_replace=serializer.validated_data[
-                "values_to_replace"] if "values_to_replace" in serializer.validated_data else None,
-            merge_columns=serializer.validated_data[
-                "merge_columns"] if "merge_columns" in serializer.validated_data else None,
-            file_mapping=serializer.validated_data[
-                "file_mapping"] if "file_mapping" in serializer.validated_data else None
-        )
-        try:
-            synchronizer.run()
-        except Exception as e:
-            raise e
-        return Response("Trades and chash flows  uploaded successfully", status=200)
+        return Response(response_data)
+    def post(self, request):
+        serializer = TradeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class TradeDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Trade.objects.all()
+    serializer_class = TradeSerializer
+
 
 class RealizedAmountView(APIView):
     def post(self, request, identifier, *args, **kwargs):

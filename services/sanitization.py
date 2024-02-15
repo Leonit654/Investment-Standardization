@@ -72,8 +72,6 @@ class Sanitizer:
             method_name = self.type_conversion_method_mapping[data_type]
             for column in columns:
                 self.df[column] = self.df[column].apply(getattr(self, method_name))
-            print(f"Coluuumnnnnnnnns{self.df.columns}")
-            print(f"{columns}")
 
     def keep_columns(self):
         if self.columns_to_keep:
@@ -132,14 +130,14 @@ class Sanitizer:
             print("Starting Sanitization")
             print("Clearing column spaces")
             self.clear_column_spaces()
-            print(f"Clearingggggg Columnsssss{self.df.columns} ")
             self.merge_columns()
+            print("Replacing Values")
+            self.replace_values()
             print("Renaming columns")
             self.rename_columns()
             print("Converting data types")
             self.convert_data_types()
             self.keep_columns()
-            self.replace_values()
             print("Finished Sanitization")
         except Exception as e:
             raise Exception(f"Error while sanitizing data: {e}")

@@ -1,34 +1,39 @@
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from apps.cash_flows.api.serializers import CashFlowSerializer
+from apps.cash_flows.models import CashFlow
+from apps.trades.models import Trade
 
-from apps.common.serializers import InputSerializer
-from services.synchronizer import Synchronizer
 
 
-class CashFlowView(APIView):
-    parser_classes = (MultiPartParser,)
 
-    def post(self, request, format=None):
-        serializer = InputSerializer(data=request.data)
+class CashFlowList(APIView):
+    pagination_class = PageNumberPagination
 
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        org_id = request.query_params.get('organizationId')
+        if org_id:
+            trades_with_org_id = Trade.objects.filter(organization_id=org_id)
+            cash_flows = CashFlow.objects.filter(trade__in=trades_with_org_id)
+        else:
+            return Response("Provide ORG ID", status=status.HTTP_400_BAD_REQUEST)
 
-        values_to_replace = serializer.validated_data.get(
-            "values_to_replace", {}
-        )
-        merge_columns = serializer.validated_data.get(
-            "merge_columns", {}
-        )
-        synchronizer = Synchronizer(
-            serializer.validated_data["file"],
-            file_type="cash_flow",
-            columns_to_rename=serializer.validated_data["column_mapping"],
-            merge_columns=merge_columns,
-            values_to_replace=values_to_replace,
-        )
-        synchronizer.run()
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(cash_flows, request)
+        serializer = CashFlowSerializer(result_page, many=True)
 
-        return Response("Cash flows uploaded successfully", status=200)
+        response_data = {
+            'results': serializer.data,
+            'total_pages': paginator.page.paginator.num_pages,
+        }
+
+        return Response(response_data)
+
+    def post(self, request):
+        serializer = CashFlowSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
