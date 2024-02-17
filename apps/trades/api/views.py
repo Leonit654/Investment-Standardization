@@ -29,8 +29,8 @@ class TradesWithCashflowView(APIView):
         task_ids = []
         for file in file:
             file_identifier = str(uuid.uuid4()) + file.name
-            File.objects.create(file_identifier=file_identifier,
-                                file=file)
+            file = File.objects.create(file_identifier=file_identifier,
+                                       file=file, file_name=list(file_mapping.keys())[0] if file_mapping.keys() else file.name)
 
             task = synchronizer.apply_async(
                 kwargs={
@@ -40,7 +40,7 @@ class TradesWithCashflowView(APIView):
                     'values_to_replace': values_to_replace,
                     'sheet_mapping': sheet_mapping,
                     'file_mapping': file_mapping,
-                    'file_name': file.name
+                    'file_name': file.file_name
                 }
             )
             task_ids.append(task.id)

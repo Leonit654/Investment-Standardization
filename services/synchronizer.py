@@ -1,5 +1,4 @@
 from typing import Literal
-
 from apps.cash_flows.api.serializers import CashFlowSerializer
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS

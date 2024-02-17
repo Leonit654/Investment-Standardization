@@ -1,8 +1,7 @@
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 
-
-fs = FileSystemStorage(location="./uploads/")
+fs = FileSystemStorage(location="./Investment_Management/uploads/")
 
 
 class TimeStamp(models.Model):
@@ -16,3 +15,4 @@ class TimeStamp(models.Model):
 class File(models.Model):
     file_identifier = models.CharField(max_length=400, unique=True)
     file = models.FileField(storage=fs)
+    file_name = models.CharField(max_length=400)
