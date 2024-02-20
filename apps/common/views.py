@@ -10,6 +10,9 @@ from rest_framework.response import Response
 from django_celery_results.models import TaskResult
 from celery.result import AsyncResult
 
+from ..cash_flows.models import CashFlow, CashFlowType
+from ..trades.models import Trade
+
 
 class Synchronizer(APIView):
     parser_classes = (MultiPartParser,)
@@ -113,3 +116,20 @@ class ConfigurationByOrgIdView(APIView):
         configurations = Configuration.objects.filter(organization_id=org_id)
         serializer = ConfigurationSerializer(configurations, many=True)
         return Response(serializer.data)
+
+
+class StatsView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        org_id = request.query_params.get('org_id')
+
+        total_trades = Trade.objects.filter(organization_id=org_id).count()
+        total_cashflows = CashFlow.objects.filter(trade__organization_id=org_id).count()
+        total_cashflow_types = CashFlowType.objects.filter(cash_flows__trade__organization_id=org_id).distinct().count()
+
+        response_data = {
+            "total_trades": total_trades,
+            "total_cashflows": total_cashflows,
+            "total_cashflow_types": total_cashflow_types
+        }
+        return Response(response_data)
