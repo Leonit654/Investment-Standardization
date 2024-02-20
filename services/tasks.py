@@ -17,21 +17,19 @@ def synchronizer(
         file_mapping=None,
         file_name=None
 ):
-    try:
+    synchronizer_instance = Synchronizer(
+        file_identifier=file_identifier,
+        columns_to_rename=columns_to_rename,
+        values_to_replace=values_to_replace,
+        multiple_sheets=sheet_mapping,
+        merge_columns=merge_columns,
+        file_mapping=file_mapping,
+        file_name=file_name
+    )
+    synchronizer_instance.run()
+    File.objects.get(file_identifier=file_identifier).delete()
 
-        synchronizer_instance = Synchronizer(
-            file_identifier=file_identifier,
-            columns_to_rename=columns_to_rename,
-            values_to_replace=values_to_replace,
-            multiple_sheets=sheet_mapping,
-            merge_columns=merge_columns,
-            file_mapping=file_mapping,
-            file_name=file_name
-        )
-        synchronizer_instance.run()
-        File.objects.get(file_identifier=file_identifier).delete()
-
-        return "Synchronization completed successfully."
-    except Exception as e:
-        logger.exception("Error occurred during synchronization:")
-        raise e
+    return "Synchronization completed successfully."
+    # except Exception as e:
+    #     logger.exception("Error occurred during synchronization:")
+    #     raise e

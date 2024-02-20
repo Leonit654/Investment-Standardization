@@ -1,6 +1,20 @@
 # Synchronize Trades and Cashflows
 
 This guide provides steps to synchronize trade and cashflow data using the provided methods.
+## Steps to set up and run the project using Docker
+
+- **Setup:**
+  - Use Git Bash or any terminal and run the command: 
+    ```
+    git clone https://github.com/Leonit654/Investment-Standardization.git
+    ```
+
+- **Running the project:**
+  - After cloning the project, use PyCharm, Visual Studio Code, or any editor that supports Python programming. 
+    After opening the project, open any terminal and run the command: 
+    ```
+    docker-compose up
+    ```
 
 ## Steps to set up and run the project
 
