@@ -64,9 +64,8 @@ class Sanitizer:
         return str(value).lower() in ['true', 'yes', '1']
 
     def rename_columns(self):
-        print("Before renaming:", self.df.columns)
-        self.df = self.df.rename(columns=self.columns_to_rename)
-        print("After renaming:", self.df.columns)
+        columns_to_rename_no_spaces = {key.strip(): value for key, value in self.columns_to_rename.items()}
+        self.df = self.df.rename(columns=columns_to_rename_no_spaces)
 
     def convert_data_types(self):
         for data_type, columns in self.data_type_mapping.items():

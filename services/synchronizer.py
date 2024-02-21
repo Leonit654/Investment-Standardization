@@ -3,11 +3,10 @@ from apps.cash_flows.api.serializers import CashFlowSerializer
 from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
-from services.file_reader import FileReader
+from services.file_reader import FileReader, logger
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 from services.object_creation import ObjectCreator
-
 
 class Synchronizer:
     model_mapping = {
@@ -27,13 +26,8 @@ class Synchronizer:
             columns_to_rename=None,
             values_to_replace=None,
             multiple_sheets=None,
-            merge_columns=None,
-            file_name=None,
-            file_mapping=None,
+            merge_columns=None
     ):
-        if file_mapping is None:
-            file_mapping = {}
-
         if multiple_sheets is None:
             multiple_sheets = {}
 
@@ -52,28 +46,29 @@ class Synchronizer:
         self.values_to_replace = values_to_replace
         self.multiple_sheets = multiple_sheets
         self.merge_columns = merge_columns
-        self.file_mapping = file_mapping
-        self.file_name = file_name
 
     def get_data_type_mapping(self):
         return invert_dict(self.model_mapping[self.file_type])
+
 
     def get_columns(self):
         return self.model_mapping[self.file_type].keys()
 
     def run(self):
+        try:
+            if not self.multiple_sheets:
+                df = FileReader(self.file_identifier).read()
+                print(df)
+                self._process_sheet(df, self.file_type)
 
-        if not self.multiple_sheets:
-            df = FileReader(self.file_identifier).read()
-            self.file_type = self.file_mapping.get(self.file_name)
-            self._process_sheet(df, self.file_type)
+            else:
+                # TODO: make sure we process trades first
+                for sheet_name, sheet_file_type in self.multiple_sheets.items():
+                    df = FileReader(self.file_identifier, sheet_names=[sheet_name]).read()
 
-        else:
-            # TODO: make sure we process trades first
-            for sheet_name, sheet_file_type in self.multiple_sheets.items():
-                df = FileReader(self.file_identifier, sheet_names=[sheet_name]).read()
-
-                self._process_sheet(df, sheet_file_type, sheet_name)
+                    self._process_sheet(df, sheet_file_type, sheet_name)
+        except Exception as e:
+            raise Exception(f"Error while reading the file: {e}")
 
     def _process_sheet(self, df, sheet_file_type, sheet_name=None):
 

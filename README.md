@@ -72,6 +72,33 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     ```
     and you should be able to use the project.
 
+- **Configuring Celery:**
+  - Firstly install a Message Broker: 
+
+      [Redis](https://redis.io/docs/install/install-redis/),
+      [RabbitMQ](https://www.rabbitmq.com/download.html)
+  - after installation, you need to start the server
+      RabbitMQ
+           windows: it should start automatically 
+           linux: sudo systemctl status rabbitmq-server
+      Redis
+           windows: Run redis-server.exe to start the Redis server.
+           linux: sudo systemctl status redis
+  - after the server has started you need to configure your settings:
+      RabbitMQ
+          ` CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+           CELERY_RESULT_BACKEND = 'rpc'`
+      Redis
+          `CELERY_BROKER_URL = 'redis://localhost:6379/0'  
+            CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'`
+  - finally start the celery work:
+        `celery -A Investment_Management worker -l INFO --pool=solo`
+
+
+  
+
+  
+
 # Synchronize Trades 
 
 ## Qkuk Data:
@@ -199,7 +226,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
           },
           {
               "column_name": "cash_flow_type",
-              "operator": "&",
+              "operator": "&",  
               "value": "deposit",
               "condition": [
                   {"column_name": "cash_flow_type", "operator": "==", "value": "'cash_order'"},
