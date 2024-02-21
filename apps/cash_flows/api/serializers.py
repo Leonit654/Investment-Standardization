@@ -39,3 +39,4 @@ class CashFlowSerializer(serializers.ModelSerializer):
     class Meta:
         model = CashFlow
         fields = ['id', 'trade', 'trade_identifier', 'identifier', 'amount', 'date', 'cash_flow_type', 'cash_flow_type_name']
+

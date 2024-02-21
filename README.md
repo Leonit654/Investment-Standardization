@@ -1,6 +1,20 @@
 # Synchronize Trades and Cashflows
 
 This guide provides steps to synchronize trade and cashflow data using the provided methods.
+## Steps to set up and run the project using Docker
+
+- **Setup:**
+  - Use Git Bash or any terminal and run the command: 
+    ```
+    git clone https://github.com/Leonit654/Investment-Standardization.git
+    ```
+
+- **Running the project:**
+  - After cloning the project, use PyCharm, Visual Studio Code, or any editor that supports Python programming. 
+    After opening the project, open any terminal and run the command: 
+    ```
+    docker-compose up
+    ```
 
 ## Steps to set up and run the project
 
@@ -185,7 +199,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
 - **Value:**
   ```json
   {
-      "trade": {},
+      "trade": [],
       "cash_flow": {
           "cashflow_type": "cash_flow_type",
           "cashflow_date": "date",
@@ -199,7 +213,7 @@ This guide provides steps to synchronize trade and cashflow data using the provi
   - **Value:**
     ```json
     {
-      "trade": {},
+      "trade": [],
       "cash_flow": [
           {
               "column_name": "cash_flow_type",
@@ -364,6 +378,41 @@ This guide provides steps to synchronize trade and cashflow data using the provi
     "cashflow": "cash_flow"
     }
     ```
+    
+# Trade Details:
+  **Method: GET, PUT, DELETE**
+
+  **URL: http://127.0.0.1:8000/trades/trade-details/<str:identifier>/**
+
+# Cash Flows Details:
+  **Method: GET, PUT, DELETE**
+
+  **URL: http://127.0.0.1:8000/cash_flows/cash_flow_detail/<str:identifier>/**
+
+### Get all Cash Flows:
+  **Method: GET**
+
+  **URL:http://127.0.0.1:8000/cash_flows/list_cash_flows/**
+
+# Cash Flow Types Details:
+  **Method: GET, PUT, DELETE**
+
+  **URL: http://127.0.0.1:8000/cash_flows/cash_flow_type_detail/<str:value>/**
+
+
+### Get all Cash Flow Types:
+  **Method: GET**
+
+  **URL:http://127.0.0.1:8000/cash_flows/list_cash_flow_type/**
+
+### Add a Cash Flow Type: 
+
+**Method: POST**
+
+**URL : http://127.0.0.1:8000/cash_flows/list_cash_flow_type/**
+#### Request Body (form-data):
+- **Key: value**
+  - **Value:** Your cashflow type file
 
     
 # **Trade Formulas:**

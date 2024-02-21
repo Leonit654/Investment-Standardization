@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  project:
+    container_name: Investment-Standardization
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: backend-image
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - DATABASE_URL=sqlite:////code/db.sqlite3
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+    networks:
+      - shared_network
+
+  celery-worker:
+    image: backend-image
+    environment:
+      - DATABASE_URL=sqlite:////code/db.sqlite3
+      - CELERY_RESULT_BACKEND:django-db
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_PERSISTENT:True
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - rabbitmq
+      - project
+    command: sh -c "celery -A Investment_Management worker -l INFO"
+    networks:
+      - shared_network
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    driver: bridge
