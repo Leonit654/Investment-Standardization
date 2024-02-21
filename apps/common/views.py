@@ -2,7 +2,7 @@ import pandas as pd
 from rest_framework.parsers import MultiPartParser
 from services.tasks import synchronizer, logger
 from rest_framework import status
-from .serializers import BothInputSerializer, ConfigurationSerializer
+from .serializers import InputSerializer, ConfigurationSerializer
 from .models import File, Configuration
 import uuid
 from rest_framework.views import APIView
@@ -18,7 +18,7 @@ class Synchronizer(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
-        serializer = BothInputSerializer(data=request.data)
+        serializer = InputSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -90,7 +90,6 @@ class TaskDetails(APIView):
             return Response({"error": "Task does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
-
 class GetColumns(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -110,6 +109,7 @@ class ConfigurationCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ConfigurationByOrgIdView(APIView):
     def get(self, request, org_id, *args, **kwargs):

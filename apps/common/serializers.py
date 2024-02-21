@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
+from apps.common.models import Configuration
 
 
 def validate_column_mapping(value):
@@ -116,27 +117,15 @@ def validate_file_or_sheet_mapping(value):
         if value not in ['trade', 'cash_flow']:
             raise serializers.ValidationError(f"{value} is not  valid. Try to use trade or cash_flow")
 
-from apps.common.models import Configuration
-
 
 class InputSerializer(serializers.Serializer):
-    file = serializers.ListField(child=serializers.FileField())
-    file_title = serializers.CharField(max_length=255)
+    trades_file = serializers.FileField(required=False)
+    cashflows_file = serializers.FileField(required=False)
+    file_title = serializers.CharField(max_length=255, required=False)
     column_mapping = serializers.JSONField(validators=[validate_column_mapping])
     values_to_replace = serializers.JSONField(validators=[validate_values_to_replace], required=False)
     sheet_mapping = serializers.JSONField(validators=[validate_file_or_sheet_mapping], required=False)
     merge_columns = serializers.JSONField(validators=[validate_merge_columns], required=False)
-    file_mapping = serializers.JSONField(validators=[validate_file_or_sheet_mapping], required=False)
-
-
-class BothInputSerializer(serializers.Serializer):
-    trades_file = serializers.FileField(required=False)
-    cashflows_file = serializers.FileField(required=False)
-    file_title = serializers.CharField(max_length=255, required=False)
-    column_mapping = serializers.JSONField()
-    values_to_replace = serializers.JSONField(required=False)
-    sheet_mapping = serializers.JSONField(required=False)
-    merge_columns = serializers.JSONField(required=False)
     organization_id = serializers.IntegerField()
 
 
