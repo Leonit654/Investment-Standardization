@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django_celery_results.models import TaskResult
 from celery.result import AsyncResult
-
 from ..cash_flows.models import CashFlow, CashFlowType
 from ..trades.models import Trade
 
@@ -53,8 +52,8 @@ class Synchronizer(APIView):
                 cashflows_file_identifier = str(uuid.uuid4()) + cashflows_file.name
                 File.objects.create(file_identifier=cashflows_file_identifier, file=cashflows_file)
 
-                task = synchronizer.apply_async(
-                    kwargs={
+                task = synchronizer(
+                    **{
                         'file_type': "cash_flow",
                         'file_identifier': cashflows_file_identifier,
                         'columns_to_rename': column_mapping.get('cash_flow'),

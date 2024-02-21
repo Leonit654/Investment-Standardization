@@ -2,7 +2,7 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from apps.organization.models import Organization
 
-fs = FileSystemStorage(location="./Investment_Management/uploads/")
+fs = FileSystemStorage(location="./uploads")
 
 
 
