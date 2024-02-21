@@ -1,8 +1,8 @@
+from apps.organization.models import Organization
 from apps.trades.models import Trade
 from apps.cash_flows.models import CashFlow, CashFlowType
 from typing import Dict, List
 
-from services.file_reader import logger
 
 
 class ObjectCreator:
@@ -11,15 +11,18 @@ class ObjectCreator:
         "cash_flow": CashFlow,
     }
 
-    def __init__(self, object_type, data: List[Dict]):
+    def __init__(self, object_type, data: List[Dict], organization_id=None):
         self.object_type = object_type
         self.data = data
+        self.organization_id = organization_id
 
     def create_new_objects(self):
         try:
             model_class = self.model_mapping.get(self.object_type)
             if not model_class:
                 raise ValueError(f"Invalid object type: {self.object_type}")
+            if model_class == Trade:
+                organization = Organization.objects.get(pk=self.organization_id)
 
             instances_to_create = []
             instances_to_update = []
@@ -36,6 +39,9 @@ class ObjectCreator:
 
                     cash_flow_type = CashFlowType.objects.get(value=cash_flow_type_value)
                     current_row_data["cash_flow_type"] = cash_flow_type
+
+                if model_class == Trade:
+                    current_row_data["organization"] = organization
 
                 identifier = current_row_data.get('identifier')
                 existing_object = model_class.objects.filter(identifier=identifier).first()

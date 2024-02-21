@@ -8,11 +8,12 @@ import json
 logger = logging.getLogger(__name__)
 
 @shared_task(bind=True)
-def synchronizer(self, file_identifier, file_type=None, columns_to_rename=None, values_to_replace=None, merge_columns=None, sheet_mapping=None):
+def synchronizer(self, file_identifier,organization_id=None, file_type=None, columns_to_rename=None, values_to_replace=None, merge_columns=None, sheet_mapping=None):
     try:
 
         synchronizer_instance = Synchronizer(
             file_identifier=file_identifier,
+            organization_id=organization_id,
             file_type=file_type,
             columns_to_rename=columns_to_rename,
             values_to_replace=values_to_replace,

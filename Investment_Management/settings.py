@@ -40,11 +40,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'django_celery_results',
     "apps.trades",
     "apps.cash_flows",
     "apps.common",
+    'apps.organization',
 ]
 
 MEDIA_URL = '/media/raw-data-files/'
@@ -148,3 +150,11 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+
+        'rest_framework.authentication.TokenAuthentication'
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 300
+}

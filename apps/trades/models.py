@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import Sum
 from decimal import Decimal
 from apps.common.models import TimeStamp
+from apps.organization.models import Organization
 
 
 class Trade(TimeStamp):
@@ -12,7 +13,7 @@ class Trade(TimeStamp):
     maturity_date = models.DateField(null=True, blank=True)
     invested_amount = models.DecimalField(null=True, max_digits=20, decimal_places=2, blank=True)
     interest_rate = models.FloatField()
-
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='trades')
     def get_realized_amount(self, reference_date):
         try:
             repayments = self.cash_flows.filter(
@@ -66,7 +67,7 @@ class Trade(TimeStamp):
                 if cashflow.cash_flow_type.value in ["principal_repayment", "interest_repayment", "general_repayment"]:
                     realized_amount = self.get_realized_amount(cashflow.date)
                     if realized_amount >= gross_expected_amount:
-                        return f"{cashflow.timestamp} with the last repayment amount of {cashflow.amount} {cashflow.cash_flows.value}"
+                        return "Loan Closed!"
 
             return "Loan Not Closed!"
 
