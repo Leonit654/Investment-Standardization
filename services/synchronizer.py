@@ -1,9 +1,7 @@
 from typing import Literal
-from apps.cash_flows.api.serializers import CashFlowSerializer
-from apps.trades.api.serializers import TradeSerializer
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
-from services.file_reader import FileReader, logger
+from services.file_reader import FileReader
 from services.sanitization import Sanitizer
 from services.utils import invert_dict
 from services.object_creation import ObjectCreator
@@ -14,14 +12,12 @@ class Synchronizer:
         "trade": TRADE_COLUMNS
     }
 
-    serializer_mapping = {
-        "cash_flow": CashFlowSerializer,
-        "trade": TradeSerializer
-    }
+
 
     def __init__(
             self,
             file_identifier,
+            organization_id=None,
             file_type: Literal["cash_flow", "trade"] = None,
             columns_to_rename=None,
             values_to_replace=None,
@@ -40,6 +36,7 @@ class Synchronizer:
         if merge_columns is None:
             merge_columns = {}
 
+        self.organization_id = organization_id
         self.file_identifier = file_identifier
         self.file_type = file_type
         self.columns_to_rename = columns_to_rename
@@ -58,7 +55,6 @@ class Synchronizer:
         try:
             if not self.multiple_sheets:
                 df = FileReader(self.file_identifier).read()
-                print(df)
                 self._process_sheet(df, self.file_type)
 
             else:
@@ -71,30 +67,31 @@ class Synchronizer:
             raise Exception(f"Error while reading the file: {e}")
 
     def _process_sheet(self, df, sheet_file_type, sheet_name=None):
+        try:
+            self.file_type = sheet_file_type if sheet_name is not None else self.file_type
+            columns_to_rename = self.columns_to_rename.get(
+                self.file_type,
+                {}
+            ) if sheet_name is not None else self.columns_to_rename
+            values_to_replace = self.values_to_replace.get(
+                self.file_type,
+                {}) if sheet_name is not None else self.values_to_replace
 
-        self.file_type = sheet_file_type if sheet_name is not None else self.file_type
-        columns_to_rename = self.columns_to_rename.get(
-            self.file_type,
-            {}
-        )
-        values_to_replace = self.values_to_replace.get(
-            self.file_type,
-            {})
-
-        merge_columns = self.merge_columns.get(
-            self.file_type,
-            {}
-        ) if sheet_name is not None else self.merge_columns
-
-        sanitizer = Sanitizer(
-            df,
-            merge_columns_config=merge_columns,
-            data_type_mapping=self.get_data_type_mapping(),
-            columns_to_keep=self.get_columns(),
-            columns_to_rename=columns_to_rename,
-            values_to_replace=values_to_replace,
-        )
-        sanitizer.run()
-        data = sanitizer.to_dict()
-        data_to_save = ObjectCreator(self.file_type, data)
-        data_to_save.create_new_objects()
+            merge_columns = self.merge_columns.get(
+                self.file_type,
+                {}
+            ) if sheet_name is not None else self.merge_columns
+            sanitizer = Sanitizer(
+                df,
+                merge_columns_config=merge_columns,
+                data_type_mapping=self.get_data_type_mapping(),
+                columns_to_keep=self.get_columns(),
+                columns_to_rename=columns_to_rename,
+                values_to_replace=values_to_replace,
+            )
+            sanitizer.run()
+            data = sanitizer.to_dict()
+            data_to_save = ObjectCreator(self.file_type, data, self.organization_id)
+            data_to_save.create_new_objects()
+        except Exception as e:
+            raise Exception(f"Error while processing data: {e}")

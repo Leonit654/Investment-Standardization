@@ -10,5 +10,8 @@ urlpatterns = [
         name="remaining-invested-amount"
     ),
     path("closing_date/<str:identifier>/", ClosingDateView.as_view(), name="closing-date"),
-    path("trade_details/<str:identifier>/", TradesDetailView.as_view(), name="trade-details"),
+    path('get-create/', TradeListView.as_view(), name='trade-list'),
+    path('detail/<int:pk>/', TradeDetailView.as_view(), name='trade-detail')
+
+
 ]

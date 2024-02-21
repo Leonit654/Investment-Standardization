@@ -1,19 +1,17 @@
 import pandas as pd
 from rest_framework.parsers import MultiPartParser
 from services.tasks import synchronizer, logger
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.views import APIView
-from .serializers import BothInputSerializer
-from .models import File
+from .serializers import BothInputSerializer, ConfigurationSerializer
+from .models import File, Configuration
 import uuid
-from ..cash_flows.models import CashFlow
-from ..trades.models import Trade
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django_celery_results.models import TaskResult  # Import your Task model from Django
+from django_celery_results.models import TaskResult
 from celery.result import AsyncResult
-from django.http import Http404
+
+from ..cash_flows.models import CashFlow, CashFlowType
+from ..trades.models import Trade
 
 
 class Synchronizer(APIView):
@@ -27,13 +25,11 @@ class Synchronizer(APIView):
         try:
             trades_file = serializer.validated_data.get('trades_file')
             cashflows_file = serializer.validated_data.get('cashflows_file')
-
+            organization_id = serializer.validated_data.get('organization_id')
             column_mapping = serializer.validated_data.get('column_mapping', {})
             values_to_replace = serializer.validated_data.get('values_to_replace', {})
             merge_columns = serializer.validated_data.get('merge_columns', {})
             sheet_mapping = serializer.validated_data.get('sheet_mapping', {})
-            # Trade.objects.all().delete()
-            # CashFlow.objects.all().delete()
             task_ids = []
 
             if trades_file:
@@ -47,7 +43,8 @@ class Synchronizer(APIView):
                         'columns_to_rename': column_mapping.get('trade'),
                         'merge_columns': merge_columns.get('trade', {}),
                         'values_to_replace': values_to_replace.get('trade'),
-                        'sheet_mapping': sheet_mapping
+                        'sheet_mapping': sheet_mapping,
+                        'organization_id': organization_id
                     }
                 )
                 task_ids.append(task.id)
@@ -98,12 +95,41 @@ class GetColumns(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, format=None):
-        cashflow_file = request.FILES.get('file')
+        file = request.FILES.get('file')
 
-        if cashflow_file:
-            df_cashflow = pd.read_excel(cashflow_file)
-
-            excel_file_columns = df_cashflow.columns
-            print(excel_file_columns)
-
+        if file:
+            df = pd.read_excel(file)
+            excel_file_columns = df.columns
             return Response(excel_file_columns, status=status.HTTP_200_OK)
+
+
+class ConfigurationCreateView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ConfigurationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ConfigurationByOrgIdView(APIView):
+    def get(self, request, org_id, *args, **kwargs):
+        configurations = Configuration.objects.filter(organization_id=org_id)
+        serializer = ConfigurationSerializer(configurations, many=True)
+        return Response(serializer.data)
+
+
+class StatsView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        org_id = request.query_params.get('org_id')
+
+        total_trades = Trade.objects.filter(organization_id=org_id).count()
+        total_cashflows = CashFlow.objects.filter(trade__organization_id=org_id).count()
+        total_cashflow_types = CashFlowType.objects.filter(cash_flows__trade__organization_id=org_id).distinct().count()
+
+        response_data = {
+            "total_trades": total_trades,
+            "total_cashflows": total_cashflows,
+            "total_cashflow_types": total_cashflow_types
+        }
+        return Response(response_data)

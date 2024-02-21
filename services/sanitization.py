@@ -131,11 +131,12 @@ class Sanitizer:
             print("Clearing column spaces")
             self.clear_column_spaces()
             self.merge_columns()
+            print("Replacing Values")
+            self.replace_values()
             print("Renaming columns")
             self.rename_columns()
             print("Converting data types")
             self.convert_data_types()
             self.keep_columns()
-            self.replace_values()
             print("Finished Sanitization")
 

@@ -116,6 +116,8 @@ def validate_file_or_sheet_mapping(value):
         if value not in ['trade', 'cash_flow']:
             raise serializers.ValidationError(f"{value} is not  valid. Try to use trade or cash_flow")
 
+from apps.common.models import Configuration
+
 
 class InputSerializer(serializers.Serializer):
     file = serializers.ListField(child=serializers.FileField())
@@ -135,3 +137,10 @@ class BothInputSerializer(serializers.Serializer):
     values_to_replace = serializers.JSONField(required=False)
     sheet_mapping = serializers.JSONField(required=False)
     merge_columns = serializers.JSONField(required=False)
+    organization_id = serializers.IntegerField()
+
+
+class ConfigurationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Configuration
+        fields = '__all__'
