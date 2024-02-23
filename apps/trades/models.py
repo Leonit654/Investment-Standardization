@@ -18,7 +18,7 @@ class Trade(TimeStamp):
         try:
             repayments = self.cash_flows.filter(
                 date__lt=reference_date,
-                cash_flow_type__value__in=["principal_repayment", "interest_repayment", "general_repayment"]
+                cash_flow_type__value__in=["principal_repayment", "interest_repayment", "general_repayment","repayment"]
             )
 
             return repayments.aggregate(Sum("amount"))["amount__sum"] or 0
@@ -54,10 +54,10 @@ class Trade(TimeStamp):
                 )["amount__sum"]
                 or 0
             )
-            return invested_amount - self.get_realized_amount(reference_date)
+            remaining_invested_amount = invested_amount - self.get_realized_amount(reference_date)
+            return max(0, remaining_invested_amount)
         except Exception as e:
             print(f"Error in get_remaining_invested_amount: {str(e)}")
-            return 0
 
     def get_closing_date(self):
         try:

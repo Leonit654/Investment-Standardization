@@ -63,15 +63,8 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    # Add other allowed origins as needed
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    # Add other allowed origins as needed
-]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "Investment_Management.urls"

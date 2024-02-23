@@ -24,12 +24,30 @@ class Synchronizer(APIView):
         try:
             trades_file = serializer.validated_data.get('trades_file')
             cashflows_file = serializer.validated_data.get('cashflows_file')
+            if not trades_file and not cashflows_file:
+                return Response({"message": "Please upload at least one file."}, status=status.HTTP_400_BAD_REQUEST)
             organization_id = serializer.validated_data.get('organization_id')
             column_mapping = serializer.validated_data.get('column_mapping', {})
             values_to_replace = serializer.validated_data.get('values_to_replace', {})
             merge_columns = serializer.validated_data.get('merge_columns', {})
             sheet_mapping = serializer.validated_data.get('sheet_mapping', {})
             task_ids = []
+
+            if sheet_mapping:
+                trade_file_identifier = str(uuid.uuid4()) + trades_file.name
+                File.objects.create(file_identifier=trade_file_identifier, file=trades_file)
+
+                task = synchronizer.apply_async(
+                    kwargs={
+                        'file_identifier': trade_file_identifier,
+                        'columns_to_rename': column_mapping,
+                        'merge_columns': merge_columns,
+                        'values_to_replace': values_to_replace,
+                        'sheet_mapping': sheet_mapping,
+                        'organization_id': organization_id
+                    }
+                )
+                task_ids.append(task.id)
 
             if trades_file:
                 trade_file_identifier = str(uuid.uuid4()) + trades_file.name
@@ -42,7 +60,6 @@ class Synchronizer(APIView):
                         'columns_to_rename': column_mapping.get('trade'),
                         'merge_columns': merge_columns.get('trade', {}),
                         'values_to_replace': values_to_replace.get('trade'),
-                        'sheet_mapping': sheet_mapping,
                         'organization_id': organization_id
                     }
                 )
@@ -52,8 +69,8 @@ class Synchronizer(APIView):
                 cashflows_file_identifier = str(uuid.uuid4()) + cashflows_file.name
                 File.objects.create(file_identifier=cashflows_file_identifier, file=cashflows_file)
 
-                task = synchronizer(
-                    **{
+                task = synchronizer.apply_async(
+                    kwargs={
                         'file_type': "cash_flow",
                         'file_identifier': cashflows_file_identifier,
                         'columns_to_rename': column_mapping.get('cash_flow'),
@@ -108,6 +125,17 @@ class ConfigurationCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConfigurationDeleteView(APIView):
+    def delete(self, request, pk, format=None):
+        try:
+            configuration = Configuration.objects.get(pk=pk)
+        except Configuration.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        configuration.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ConfigurationByOrgIdView(APIView):

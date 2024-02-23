@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 # from apps.trades.api.views import TradesWithCashflowView
 from apps.common.views import Synchronizer, TaskDetails, GetColumns, ConfigurationCreateView, ConfigurationByOrgIdView, \
-    StatsView
+    StatsView, ConfigurationDeleteView
 
 from rest_framework.authtoken.views import obtain_auth_token
 
@@ -15,6 +15,7 @@ urlpatterns = [
     path('task/<str:task_id>/', TaskDetails.as_view(), name='task-details'),
     path('columns', GetColumns.as_view(), name='get-columns'),
     path('save-configuration', ConfigurationCreateView.as_view(), name='configuration-create'),
+    path('configuration/<int:pk>', ConfigurationDeleteView.as_view(), name='configuration-delete'),
     path('get-configs/<int:org_id>/', ConfigurationByOrgIdView.as_view(), name='configuration-get'),
     path('org/', include('apps.organization.urls'), name='organization'),
     path('stats/', StatsView.as_view(), name='stats'),

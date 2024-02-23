@@ -1,6 +1,17 @@
+import os
+
 from rest_framework import serializers
 from apps.trades.services import TRADE_COLUMNS
 from apps.cash_flows.services import CASH_FLOW_COLUMNS
+
+
+def validate_file_extension(value):
+    if not hasattr(value, 'name'):
+        return
+    file_name, file_extension = os.path.splitext(value.name)
+    allowed_extensions = ['.xlsx', '.xls', '.csv']
+    if file_extension.lower() not in allowed_extensions:
+        raise serializers.ValidationError("Only Excel (XLSX/XLS) and CSV files are allowed.")
 
 
 def validate_key(key, valid_keys):
@@ -18,20 +29,40 @@ def validate_column_mapping(value):
     if not value:
         raise serializers.ValidationError("column_mapping dictionary must not be empty")
 
+    at_least_one_mapping = []
+
     for key, mapping in value.items():
         validate_key(key, ["trade", "cash_flow"])
+
         if not isinstance(mapping, dict):
             raise serializers.ValidationError(f"Mapping columns for key '{key}' must be a dict")
-
+        if not mapping:
+            at_least_one_mapping.append(False)
+        else:
+            at_least_one_mapping.append(True)
         for user_field, standard_field in mapping.items():
-            if key == "trade" and standard_field not in trade_standard_columns:
-                raise serializers.ValidationError(f"{standard_field} is not valid. Try to use {trade_standard_columns}")
-            if key == "cash_flow" and standard_field not in cash_flow_standard_columns:
-                raise serializers.ValidationError(f"{standard_field} is not valid. Try to use {cash_flow_standard_columns}")
+            if not user_field or not standard_field:
+                raise serializers.ValidationError("Both user_field and standard_field must be provided")
+
+            if key == "trade":
+                if standard_field not in trade_standard_columns:
+                    raise serializers.ValidationError(
+                        f"{standard_field} is not a valid column name for 'trade'. Valid columns are: {trade_standard_columns}"
+                    )
+            elif key == "cash_flow":
+                if standard_field not in cash_flow_standard_columns:
+                    raise serializers.ValidationError(
+                        f"{standard_field} is not a valid column name for 'cash_flow'. Valid columns are: {cash_flow_standard_columns}"
+                    )
+
+    if not any(at_least_one_mapping):
+        raise serializers.ValidationError("At least one column mapping must be provided for 'trade' or 'cash_flow'")
+
+    return value
+
 
 def validate_values_to_replace(value):
-    trade_standard_columns = list(TRADE_COLUMNS)
-    cash_flow_standard_columns = list(CASH_FLOW_COLUMNS)
+    columns_dicts = {"trade": TRADE_COLUMNS, "cash_flow": CASH_FLOW_COLUMNS}
 
     if not isinstance(value, dict):
         raise serializers.ValidationError("Values to replace must be a dictionary")
@@ -39,12 +70,14 @@ def validate_values_to_replace(value):
     if not value:
         raise serializers.ValidationError("Values to replace dictionary must not be empty")
 
+    keys_to_delete = []
     for key, replace_items in value.items():
         validate_key(key, ["trade", "cash_flow"])
-        if replace_items is None:
-            return
-        if not isinstance(replace_items, dict):
-            raise serializers.ValidationError(f"Replace items for key '{key}' must be a dict")
+        if replace_items is None or replace_items == []:
+            keys_to_delete.append(key)
+            continue
+        if not isinstance(replace_items, list):
+            raise serializers.ValidationError(f"Replace items for key '{key}' must be a list")
 
         for replace_item in replace_items:
             if not isinstance(replace_item, dict):
@@ -54,16 +87,11 @@ def validate_values_to_replace(value):
             for req_key in required_keys:
                 if req_key not in replace_item:
                     raise serializers.ValidationError(f"'{req_key}' is required in each replace item for key '{key}'")
+                if not replace_item[req_key]:
+                    raise serializers.ValidationError(f"'{req_key}' in replace item for key '{key}' cannot be empty")
 
-            column_name = replace_item.get("column_name")
-            if key == "trade" and column_name not in trade_standard_columns:
-                raise serializers.ValidationError(
-                    f"'{column_name}' is not a valid column name for 'trade'. It will not be saved in the standard "
-                    f"tables.")
-            elif key == "cash_flow" and column_name not in cash_flow_standard_columns:
-                raise serializers.ValidationError(
-                    f"'{column_name}' is not a valid column name for 'cash_flow'. It will not be saved in the "
-                    f"standard tables.")
+            # column_name = replace_item.get("column_name")
+            # validate_key(column_name, columns_dicts.get(key, {}))
 
             operator_value = replace_item.get("operator")
             common_operators = ["&", "|"]
@@ -81,9 +109,20 @@ def validate_values_to_replace(value):
                     if condition_key not in condition_item:
                         raise serializers.ValidationError(
                             f"'{condition_key}' is required in each condition item for key '{key}'")
+                    if not condition_item[condition_key]:
+                        raise serializers.ValidationError(
+                            f"'{condition_key}' in condition item for key '{key}' cannot be empty")
+
+    for key in keys_to_delete:
+        del value[key]
+
+    return value
 
 
 def validate_merge_columns(value):
+    if not value:
+        raise serializers.ValidationError("You need to fill all the fields")
+
     allowed_operators = ["sum", "subtract", "multiply"]
 
     if not isinstance(value, dict):
@@ -102,6 +141,17 @@ def validate_merge_columns(value):
                 for req_key in required_keys:
                     if req_key not in merge:
                         raise serializers.ValidationError(f"'{req_key}' is required in each merge column configuration")
+                    elif req_key == "columns_to_merge":
+                        if not merge[req_key]:
+                            raise serializers.ValidationError(
+                                "'columns_to_merge' cannot be empty in each merge column  configuration")
+                        elif not all(column.strip() for column in merge[req_key]):
+                            raise serializers.ValidationError(
+                                f"{merge_config} 'columns_to_merge' elements cannot be empty or contain only "
+                                f"whitespace in each merge column  configuration")
+                    elif not merge[req_key] or merge[req_key].strip() == "":
+                        raise serializers.ValidationError(
+                            f"'{req_key}' cannot be empty or contain only whitespace in each merge column configuration")
 
                 operator_value = merge.get("operator")
                 if operator_value not in allowed_operators:
@@ -111,10 +161,6 @@ def validate_merge_columns(value):
                 columns_to_merge = merge.get("columns_to_merge", [])
                 if not all(isinstance(column, str) for column in columns_to_merge):
                     raise serializers.ValidationError("columns_to_merge must be a list of column names")
-                columns_dicts = {"trade": TRADE_COLUMNS, "cash_flow": CASH_FLOW_COLUMNS}
-
-                for column in columns_to_merge:
-                    validate_key(column, columns_dicts.get(merge_config, {}))
 
     return value
 
